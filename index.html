@@ -1,13 +1,16 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TT Import Management System</title>
+    <title>TT Import Management System v2.0</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
+        /* [Todo el CSS permanece igual] */
         * {
             margin: 0;
             padding: 0;
@@ -16,15 +19,17 @@
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background-color: #f8fafc;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
             line-height: 1.6;
         }
 
         .navbar {
-            background: linear-gradient(135deg, #1e3a32, #2d5a27, #4a8b3c);
-            color: white;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            color: #1e293b;
             padding: 1rem 2rem;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
             position: sticky;
             top: 0;
             z-index: 1000;
@@ -47,8 +52,19 @@
         .logo {
             font-size: 2rem;
             font-weight: bold;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .version-badge {
+            background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
-            text-decoration: none;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
         }
 
         .company-info {
@@ -63,7 +79,7 @@
 
         .company-subtitle {
             font-size: 0.85rem;
-            opacity: 0.9;
+            color: #64748b;
         }
 
         .nav-actions {
@@ -73,19 +89,20 @@
         }
 
         .nav-btn {
-            background: rgba(255,255,255,0.1);
+            background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
-            border: 1px solid rgba(255,255,255,0.3);
+            border: none;
             padding: 0.5rem 1rem;
-            border-radius: 6px;
+            border-radius: 8px;
             cursor: pointer;
             transition: all 0.3s ease;
             font-size: 0.9rem;
+            font-weight: 500;
         }
 
         .nav-btn:hover {
-            background: rgba(255,255,255,0.2);
-            transform: translateY(-1px);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
         }
 
         .container {
@@ -95,11 +112,12 @@
         }
 
         .page-header {
-            background: white;
-            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
             padding: 2rem;
             margin-bottom: 2rem;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
         }
 
         .breadcrumb {
@@ -111,7 +129,10 @@
         .page-title {
             font-size: 2.5rem;
             font-weight: 700;
-            color: #1e293b;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
             margin-bottom: 0.5rem;
         }
 
@@ -128,11 +149,35 @@
         }
 
         .metric-card {
-            background: white;
-            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
             padding: 1.5rem;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-            border-left: 4px solid #4a8b3c;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+        }
+
+        .metric-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .metric-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
         }
 
         .metric-title {
@@ -146,38 +191,56 @@
         .metric-value {
             font-size: 2rem;
             font-weight: bold;
-            color: #1e293b;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
             margin: 0.5rem 0;
         }
 
         .metric-change {
             font-size: 0.875rem;
             color: #059669;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .metric-change.negative {
+            color: #dc2626;
         }
 
         .tabs {
             display: flex;
-            background: white;
-            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
             padding: 0.5rem;
             margin-bottom: 2rem;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            overflow-x: auto;
         }
 
         .tab {
             flex: 1;
             padding: 1rem;
             text-align: center;
-            border-radius: 8px;
+            border-radius: 15px;
             cursor: pointer;
             transition: all 0.3s ease;
             font-weight: 500;
+            white-space: nowrap;
+            min-width: 120px;
+        }
+
+        .tab:hover {
+            background: rgba(102, 126, 234, 0.1);
         }
 
         .tab.active {
-            background: #4a8b3c;
+            background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
-            box-shadow: 0 2px 8px rgba(74, 139, 60, 0.3);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
         }
 
         .tab-content {
@@ -186,17 +249,31 @@
 
         .tab-content.active {
             display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .main-card {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
             overflow: hidden;
         }
 
         .card-header {
-            background: linear-gradient(135deg, #4a8b3c, #2d5a27);
+            background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
             padding: 2rem;
             text-align: center;
@@ -229,7 +306,7 @@
 
         .section-header:hover {
             background: #f1f5f9;
-            border-left-color: #4a8b3c;
+            border-left-color: #667eea;
         }
 
         .section-header.completed {
@@ -262,7 +339,7 @@
         }
 
         .section.expanded .section-content {
-            max-height: 2000px;
+            max-height: 3000px;
         }
 
         .form-grid {
@@ -299,17 +376,54 @@
         .form-group select:focus,
         .form-group textarea:focus {
             outline: none;
-            border-color: #4a8b3c;
+            border-color: #667eea;
             background: white;
-            box-shadow: 0 0 0 3px rgba(74, 139, 60, 0.1);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .qr-scanner-section {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+            border-radius: 15px;
+            padding: 2rem;
+            margin: 2rem;
+            text-align: center;
+            border: 2px dashed #667eea;
+        }
+
+        .qr-scanner-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            transition: all 0.3s ease;
+        }
+
+        .qr-scanner-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .qr-display {
+            margin-top: 2rem;
+            padding: 2rem;
+            background: white;
+            border-radius: 12px;
+            display: inline-block;
         }
 
         .cost-summary {
-            background: linear-gradient(135deg, #f8fafc, #e2e8f0);
-            border-radius: 12px;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
+            border-radius: 15px;
             padding: 2rem;
             margin: 1.5rem 2rem;
-            border: 1px solid #e2e8f0;
+            border: 1px solid rgba(102, 126, 234, 0.2);
         }
 
         .summary-header {
@@ -320,7 +434,10 @@
         .summary-title {
             font-size: 1.5rem;
             font-weight: bold;
-            color: #1e293b;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
             margin-bottom: 0.5rem;
         }
 
@@ -333,10 +450,10 @@
         }
 
         .cost-row:last-child {
-            border-bottom: 3px solid #4a8b3c;
+            border-bottom: 3px solid #667eea;
             font-weight: bold;
             font-size: 1.2rem;
-            background: rgba(74, 139, 60, 0.1);
+            background: rgba(102, 126, 234, 0.1);
             margin-top: 1rem;
             padding: 1rem;
             border-radius: 8px;
@@ -344,45 +461,45 @@
 
         .chart-container {
             padding: 2rem;
-            max-width: 600px;
+            max-width: 800px;
             margin: 0 auto;
         }
 
         .btn {
-            background: #4a8b3c;
+            background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
             border: none;
-            padding: 0.875rem 1.75rem;
+            padding: 0.5rem 1rem;
             border-radius: 8px;
             cursor: pointer;
-            font-size: 1rem;
+            font-size: 0.9rem;
             font-weight: 500;
             transition: all 0.3s ease;
             display: inline-flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.3rem;
+            min-width: auto;
         }
 
         .btn:hover {
-            background: #2d5a27;
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(74, 139, 60, 0.3);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
         }
 
         .btn-secondary {
-            background: #64748b;
+            background: linear-gradient(135deg, #64748b, #475569);
         }
 
         .btn-secondary:hover {
-            background: #475569;
+            box-shadow: 0 4px 12px rgba(100, 116, 139, 0.4);
         }
 
         .btn-danger {
-            background: #dc2626;
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
         }
 
         .btn-danger:hover {
-            background: #b91c1c;
+            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
         }
 
         .action-buttons {
@@ -390,10 +507,10 @@
             text-align: center;
             background: #f8fafc;
             border-top: 1px solid #e2e8f0;
-        }
-
-        .action-buttons .btn {
-            margin: 0 0.5rem;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
         }
 
         .status-badge {
@@ -404,10 +521,25 @@
             font-weight: 500;
         }
 
-        .status-disponible { background: #dcfce7; color: #166534; }
-        .status-reservado { background: #fef3c7; color: #92400e; }
-        .status-transito { background: #dbeafe; color: #1e40af; }
-        .status-entregado { background: #fecaca; color: #991b1b; }
+        .status-disponible {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-reservado {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-transito {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .status-entregado {
+            background: #fecaca;
+            color: #991b1b;
+        }
 
         .data-table {
             width: 100%;
@@ -415,11 +547,10 @@
             background: white;
             border-radius: 12px;
             overflow: hidden;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
         }
 
         .data-table th {
-            background: #4a8b3c;
+            background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
             padding: 1rem;
             text-align: left;
@@ -432,15 +563,30 @@
         }
 
         .data-table tr:hover {
-            background: #f8fafc;
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        /* NUEVO: Estilos para botones de acción en tabla */
+        .table-actions {
+            display: flex;
+            gap: 0.3rem;
+            flex-wrap: nowrap;
+        }
+
+        .table-actions .btn {
+            padding: 0.3rem 0.6rem;
+            font-size: 0.8rem;
+            min-width: 40px;
+            justify-content: center;
         }
 
         .search-bar {
-            background: white;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
             padding: 1.5rem;
-            border-radius: 12px;
+            border-radius: 15px;
             margin-bottom: 2rem;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
             display: flex;
             gap: 1rem;
             align-items: center;
@@ -450,22 +596,24 @@
         .search-input {
             flex: 1;
             min-width: 250px;
-            padding: 0.75rem;
+            padding: 0.875rem;
             border: 2px solid #e5e7eb;
-            border-radius: 8px;
+            border-radius: 12px;
             font-size: 1rem;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
 
         .filter-select {
-            padding: 0.75rem;
+            padding: 0.875rem;
             border: 2px solid #e5e7eb;
-            border-radius: 8px;
+            border-radius: 12px;
             font-size: 1rem;
             min-width: 150px;
-        }
-
-        .hidden {
-            display: none !important;
         }
 
         .modal {
@@ -474,27 +622,54 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0,0,0,0.5);
+            background: rgba(0, 0, 0, 0.7);
             display: flex;
             align-items: center;
             justify-content: center;
             z-index: 2000;
+            backdrop-filter: blur(5px);
         }
 
         .modal-content {
             background: white;
-            border-radius: 12px;
+            border-radius: 20px;
             padding: 2rem;
-            max-width: 800px;
-            max-height: 80vh;
+            max-width: 900px;
+            max-height: 85vh;
             overflow-y: auto;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+            animation: modalSlideIn 0.3s ease;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .alert {
             padding: 1rem;
-            border-radius: 8px;
+            border-radius: 12px;
             margin: 1rem 0;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
         }
 
         .alert-success {
@@ -509,76 +684,65 @@
             border: 1px solid #fca5a5;
         }
 
-        .report-header {
-            text-align: center;
-            padding: 2rem;
-            border-bottom: 3px solid #4a8b3c;
-            margin-bottom: 2rem;
-        }
-
-        .report-logo {
-            font-size: 3rem;
-            color: #4a8b3c;
-            margin-bottom: 1rem;
-        }
-
-        .report-title {
-            font-size: 2rem;
-            font-weight: bold;
-            color: #1e293b;
-            margin-bottom: 0.5rem;
-        }
-
-        .report-subtitle {
-            color: #64748b;
-            font-size: 1.1rem;
-        }
-
-        .report-section {
-            margin-bottom: 3rem;
-            page-break-inside: avoid;
-        }
-
-        .report-section h3 {
-            background: #4a8b3c;
-            color: white;
-            padding: 1rem;
-            margin-bottom: 1rem;
-            border-radius: 8px;
-        }
-
-        .report-grid {
+        .dashboard-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
             margin-bottom: 2rem;
         }
 
-        .report-item {
-            background: #f8fafc;
-            padding: 1rem;
-            border-radius: 6px;
-            border-left: 4px solid #4a8b3c;
+        .dashboard-chart-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
         }
 
-        .report-label {
-            font-size: 0.875rem;
-            color: #64748b;
-            margin-bottom: 0.25rem;
-        }
-
-        .report-value {
+        .dashboard-chart-title {
+            font-size: 1.25rem;
             font-weight: 600;
-            color: #1e293b;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .recent-activity {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .activity-item {
+            padding: 1rem;
+            border-left: 3px solid #667eea;
+            margin-bottom: 1rem;
+            background: rgba(102, 126, 234, 0.05);
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .activity-item:hover {
+            transform: translateX(5px);
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .activity-time {
+            font-size: 0.85rem;
+            color: #64748b;
+        }
+
+        .hidden {
+            display: none !important;
         }
 
         @media (max-width: 768px) {
             .form-grid {
                 grid-template-columns: 1fr;
-            }
-            
-            .container {
-                padding: 0 0.5rem;
             }
 
             .nav-content {
@@ -586,81 +750,179 @@
                 gap: 1rem;
             }
 
-            .dashboard {
-                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            }
-
             .tabs {
                 flex-direction: column;
+            }
+
+            .tab {
+                width: 100%;
+            }
+
+            .table-actions {
+                flex-direction: column;
+                gap: 0.2rem;
+            }
+
+            .table-actions .btn {
+                width: 100%;
             }
         }
 
         @media print {
-            .navbar, .tabs, .action-buttons, .search-bar {
-                display: none !important;
-            }
-            
             body {
                 background: white;
+            }
+
+            .navbar,
+            .tabs,
+            .action-buttons,
+            .search-bar {
+                display: none !important;
             }
         }
     </style>
 </head>
+
 <body>
     <nav class="navbar">
         <div class="nav-content">
             <div class="logo-section">
                 <div class="logo">🚛 TT</div>
+                <span class="version-badge">v2.0</span>
                 <div class="company-info">
                     <div class="company-name">Transport & Trade Solutions</div>
-                    <div class="company-subtitle">Import Management System</div>
+                    <div class="company-subtitle">Advanced Import Management System</div>
                 </div>
             </div>
             <div class="nav-actions">
-                <button class="nav-btn" onclick="exportAllData()">📊 Exportar Todo</button>
-                <button class="nav-btn" onclick="showDashboard()">📈 Dashboard</button>
-                <button class="nav-btn" onclick="showHelp()">❓ Ayuda</button>
+                <button class="nav-btn" onclick="exportAllData()">📊 Exportar</button>
+                <button class="nav-btn" onclick="showTab('dashboard')">📈 Dashboard</button>
+                <button class="nav-btn" onclick="showNotifications()">🔔 Alertas</button>
+                <button class="nav-btn" onclick="resetSystem()">🧹 Reiniciar</button>
             </div>
         </div>
     </nav>
 
     <div class="container">
         <div class="page-header">
-            <div class="breadcrumb">Inicio > Sistema de Gestión > Importaciones</div>
-            <h1 class="page-title">Sistema de Gestión de Importaciones</h1>
-            <p class="page-subtitle">Registro completo, trazabilidad y control de costos para equipos importados</p>
+            <div class="breadcrumb">Inicio > Sistema de Gestión v2.0 > Importaciones</div>
+            <h1 class="page-title">Sistema de Gestión de Importaciones v2.0</h1>
+            <p class="page-subtitle">Control total con escaneo QR, análisis avanzado y dashboard en tiempo real</p>
         </div>
 
-        <!-- Dashboard Métricas -->
         <div class="dashboard" id="dashboard-metrics">
             <div class="metric-card">
+                <div class="metric-icon">📦</div>
                 <div class="metric-title">Total Fichas</div>
                 <div class="metric-value" id="total-records">0</div>
-                <div class="metric-change">+0 este mes</div>
+                <div class="metric-change" id="records-change">+0 este mes</div>
             </div>
             <div class="metric-card">
-                <div class="metric-title">Valor Total Importado</div>
+                <div class="metric-icon">💰</div>
+                <div class="metric-title">Valor Total</div>
                 <div class="metric-value" id="total-value">$0</div>
                 <div class="metric-change">USD acumulado</div>
             </div>
             <div class="metric-card">
+                <div class="metric-icon">📊</div>
                 <div class="metric-title">En Stock</div>
                 <div class="metric-value" id="stock-count">0</div>
                 <div class="metric-change">equipos disponibles</div>
             </div>
             <div class="metric-card">
+                <div class="metric-icon">✅</div>
                 <div class="metric-title">Vendidos</div>
                 <div class="metric-value" id="sold-count">0</div>
-                <div class="metric-change">este período</div>
+                <div class="metric-change" id="sold-change">este período</div>
             </div>
         </div>
 
-        <!-- Tabs de Navegación -->
         <div class="tabs">
+            <div class="tab" onclick="showTab('dashboard')">📈 Dashboard</div>
             <div class="tab active" onclick="showTab('nueva-ficha')">📝 Nueva Ficha</div>
+            <div class="tab" onclick="showTab('scanner')">📱 Scanner QR</div>
             <div class="tab" onclick="showTab('lista-fichas')">📋 Lista de Fichas</div>
             <div class="tab" onclick="showTab('reportes')">📊 Reportes</div>
             <div class="tab" onclick="showTab('clientes')">👥 Clientes</div>
+        </div>
+
+        <!-- Tab: Dashboard -->
+        <div id="dashboard" class="tab-content">
+            <div class="dashboard-grid">
+                <div class="dashboard-chart-card" style="grid-column: span 2;">
+                    <h3 class="dashboard-chart-title">📊 Evolución de Importaciones</h3>
+                    <canvas id="evolutionChart"></canvas>
+                </div>
+                <div class="dashboard-chart-card">
+                    <h3 class="dashboard-chart-title">🥧 Distribución por Estado</h3>
+                    <canvas id="statusPieChart"></canvas>
+                </div>
+                <div class="dashboard-chart-card">
+                    <h3 class="dashboard-chart-title">🎯 Performance vs Objetivo</h3>
+                    <canvas id="performanceChart"></canvas>
+                </div>
+                <div class="dashboard-chart-card">
+                    <h3 class="dashboard-chart-title">💼 Top Marcas</h3>
+                    <canvas id="brandsChart"></canvas>
+                </div>
+                <div class="dashboard-chart-card">
+                    <h3 class="dashboard-chart-title">💵 Análisis de Costos</h3>
+                    <canvas id="costsBarChart"></canvas>
+                </div>
+                <div class="dashboard-chart-card">
+                    <h3 class="dashboard-chart-title">👥 Top Clientes</h3>
+                    <canvas id="clientsChart"></canvas>
+                </div>
+            </div>
+
+            <div class="recent-activity">
+                <h3 class="dashboard-chart-title">🕐 Actividad Reciente</h3>
+                <div id="activity-list">
+                    <div class="activity-item">
+                        <div>No hay actividad reciente</div>
+                        <div class="activity-time">Esperando registros...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: Scanner QR -->
+        <div id="scanner" class="tab-content">
+            <div class="main-card">
+                <div class="card-header">
+                    <h1>📱 Scanner QR - Carga Rápida</h1>
+                    <p>Escanea o simula códigos QR para cargar datos automáticamente</p>
+                </div>
+
+                <div class="qr-scanner-section">
+                    <h2 style="margin-bottom: 1rem;">🎯 Simulador de Escaneo QR</h2>
+                    <p style="color: #64748b; margin-bottom: 2rem;">
+                        Simula el escaneo de un equipo para cargar datos de ejemplo
+                    </p>
+
+                    <button class="qr-scanner-btn" onclick="simulateQRScan()">
+                        📷 Simular Escaneo QR
+                    </button>
+
+                    <div style="margin-top: 2rem; display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                        <button class="btn" onclick="simulateQRScan('excavadora')">Excavadora CAT 320D</button>
+                        <button class="btn" onclick="simulateQRScan('retroexcavadora')">Retroexcavadora JD 310</button>
+                        <button class="btn" onclick="simulateQRScan('camion')">Camión Volvo FH16</button>
+                    </div>
+
+                    <div class="qr-display hidden" id="qr-display">
+                        <h3 style="margin-bottom: 1rem;">Código QR del Equipo</h3>
+                        <div id="qrcode"></div>
+                        <p style="margin-top: 1rem; color: #64748b;">Escaneado exitosamente ✓</p>
+                    </div>
+                </div>
+
+                <div id="scanned-data" class="section-content" style="padding: 2rem; display: none;">
+                    <div class="alert alert-success">
+                        ✅ Datos cargados desde QR. Revisa y completa la información faltante.
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Tab: Nueva Ficha -->
@@ -725,7 +987,8 @@
                             </div>
                             <div class="form-group">
                                 <label>ID Landed Cost *</label>
-                                <input type="text" id="landed-cost-id" placeholder="LC-2024-001" onchange="toggleCostSection()" required>
+                                <input type="text" id="landed-cost-id" placeholder="LC-2024-001"
+                                    onchange="toggleCostSection()" required>
                             </div>
                         </div>
                     </div>
@@ -741,55 +1004,64 @@
                         <div class="form-grid">
                             <div class="form-group">
                                 <label>Valor CIF (USD) *</label>
-                                <input type="number" id="cif-value" placeholder="50000" onchange="calculateLandedCost()" required>
+                                <input type="number" id="cif-value" placeholder="50000" onchange="calculateLandedCost()"
+                                    required>
                                 <small>Costo + Seguro + Flete</small>
                             </div>
                             <div class="form-group">
                                 <label>Derechos de Importación (USD) *</label>
-                                <input type="number" id="import-duties" placeholder="5000" onchange="calculateLandedCost()" required>
+                                <input type="number" id="import-duties" placeholder="5000"
+                                    onchange="calculateLandedCost()" required>
                             </div>
                             <div class="form-group">
                                 <label>Tasa de Estadística (USD) *</label>
-                                <input type="number" id="statistics-fee" placeholder="500" onchange="calculateLandedCost()" required>
+                                <input type="number" id="statistics-fee" placeholder="500"
+                                    onchange="calculateLandedCost()" required>
                             </div>
                             <div class="form-group">
                                 <label>IVA (USD) *</label>
-                                <input type="number" id="vat" placeholder="8000" onchange="calculateLandedCost()" required>
+                                <input type="number" id="vat" placeholder="8000" onchange="calculateLandedCost()"
+                                    required>
                             </div>
                             <div class="form-group">
                                 <label>Otros Impuestos (USD)</label>
-                                <input type="number" id="other-taxes" placeholder="1000" onchange="calculateLandedCost()">
+                                <input type="number" id="other-taxes" placeholder="1000"
+                                    onchange="calculateLandedCost()">
                             </div>
                             <div class="form-group">
                                 <label>Honorario Despachante (USD) *</label>
-                                <input type="number" id="customs-fee" placeholder="800" onchange="calculateLandedCost()" required>
+                                <input type="number" id="customs-fee" placeholder="800" onchange="calculateLandedCost()"
+                                    required>
                             </div>
                             <div class="form-group">
                                 <label>Flete Interno (USD) *</label>
-                                <input type="number" id="internal-freight" placeholder="1200" onchange="calculateLandedCost()" required>
+                                <input type="number" id="internal-freight" placeholder="1200"
+                                    onchange="calculateLandedCost()" required>
                             </div>
                             <div class="form-group">
                                 <label>Gastos Portuarios (USD) *</label>
-                                <input type="number" id="port-expenses" placeholder="600" onchange="calculateLandedCost()" required>
+                                <input type="number" id="port-expenses" placeholder="600"
+                                    onchange="calculateLandedCost()" required>
                             </div>
                             <div class="form-group">
                                 <label>Inspecciones y Certificaciones (USD) *</label>
-                                <input type="number" id="inspections" placeholder="300" onchange="calculateLandedCost()" required>
+                                <input type="number" id="inspections" placeholder="300" onchange="calculateLandedCost()"
+                                    required>
                             </div>
                         </div>
-                        
+
                         <div class="cost-summary">
                             <div class="summary-header">
                                 <div class="summary-title">📊 Resumen de Costos de Importación</div>
                                 <p>Desglose completo del landed cost unitario (LCCU)</p>
                             </div>
-                            
+
                             <div class="cost-row">
-                                <span>💼 Valor CIF (Costo + Seguro + Flete):</span>
+                                <span>💼 Valor CIF:</span>
                                 <span id="summary-cif">$0</span>
                             </div>
                             <div class="cost-row">
-                                <span>🏛️ Derechos de Importación:</span>
+                                <span>🛃 Derechos de Importación:</span>
                                 <span id="summary-duties">$0</span>
                             </div>
                             <div class="cost-row">
@@ -817,17 +1089,17 @@
                                 <span id="summary-port">$0</span>
                             </div>
                             <div class="cost-row">
-                                <span>🔍 Inspecciones y Certificaciones:</span>
+                                <span>🔍 Inspecciones:</span>
                                 <span id="summary-inspections">$0</span>
                             </div>
                             <div class="cost-row">
-                                <span><strong>🎯 Landed Cost por Unidad (LCCU):</strong></span>
+                                <span><strong>🎯 Landed Cost Total:</strong></span>
                                 <span id="total-lccu"><strong>$0</strong></span>
                             </div>
                         </div>
 
                         <div class="chart-container">
-                            <canvas id="costsChart" width="400" height="400"></canvas>
+                            <canvas id="costsChart"></canvas>
                         </div>
                     </div>
                 </div>
@@ -867,7 +1139,8 @@
                             <div class="form-group">
                                 <label>Estado Actual</label>
                                 <div id="status-display">
-                                    <span class="status-badge status-disponible hidden" id="status-badge">Seleccionar estado</span>
+                                    <span class="status-badge status-disponible hidden" id="status-badge">Seleccionar
+                                        estado</span>
                                 </div>
                             </div>
                         </div>
@@ -926,7 +1199,8 @@
                             </div>
                             <div class="form-group">
                                 <label>Diagnóstico Detallado</label>
-                                <textarea id="diagnosis" rows="4" placeholder="Descripción técnica detallada del problema..."></textarea>
+                                <textarea id="diagnosis" rows="4"
+                                    placeholder="Descripción técnica detallada del problema..."></textarea>
                             </div>
                             <div class="form-group">
                                 <label>Causa Raíz de la Falla</label>
@@ -958,7 +1232,8 @@
                             </div>
                             <div class="form-group">
                                 <label>Horas Hombre Taller</label>
-                                <input type="number" step="0.5" id="labor-hours" placeholder="8.5" onchange="calculateTotalCost()">
+                                <input type="number" step="0.5" id="labor-hours" placeholder="8.5"
+                                    onchange="calculateTotalCost()">
                             </div>
                             <div class="form-group">
                                 <label>Costo de Repuestos (USD)</label>
@@ -970,7 +1245,8 @@
                             </div>
                             <div class="form-group">
                                 <label>Costo Total Interno (USD)</label>
-                                <input type="number" id="total-internal-cost" placeholder="Calculado automáticamente" readonly>
+                                <input type="number" id="total-internal-cost" placeholder="Calculado automáticamente"
+                                    readonly>
                             </div>
                             <div class="form-group">
                                 <label>Resolución del Caso</label>
@@ -987,9 +1263,11 @@
 
                 <div class="action-buttons">
                     <button class="btn btn-secondary" onclick="resetForm()">🔄 Limpiar</button>
-                    <button class="btn btn-secondary" onclick="saveAsDraft()">💾 Guardar Borrador</button>
-                    <button class="btn" onclick="saveRecord()">✅ Guardar Ficha</button>
-                    <button class="btn" onclick="generateReport()">📄 Ver Reporte</button>
+                    <button class="btn btn-secondary" onclick="saveAsDraft()">💾 Borrador</button>
+                    <button class="btn" id="save-button" onclick="saveRecord()">✅ Guardar Ficha</button>
+                    <button class="btn" onclick="generateQRCode()">📱 Generar QR</button>
+                    <button class="btn btn-danger hidden" id="cancel-edit-btn" onclick="cancelEdit()">✖️ Cancelar
+                        Edición</button>
                 </div>
             </div>
         </div>
@@ -997,7 +1275,8 @@
         <!-- Tab: Lista de Fichas -->
         <div id="lista-fichas" class="tab-content">
             <div class="search-bar">
-                <input type="text" class="search-input" placeholder="Buscar por serie, marca, modelo..." id="search-input" onkeyup="filterRecords()">
+                <input type="text" class="search-input" placeholder="🔍 Buscar por serie, marca, modelo..."
+                    id="search-input" onkeyup="filterRecords()">
                 <select class="filter-select" id="status-filter" onchange="filterRecords()">
                     <option value="">Todos los estados</option>
                     <option value="disponible">Disponible</option>
@@ -1012,33 +1291,36 @@
                     <option value="taller-acondicionamiento">Taller (Acondicionamiento)</option>
                     <option value="vendido">Vendido</option>
                 </select>
-                <button class="btn" onclick="exportFilteredData()">📊 Exportar Filtrados</button>
+                <button class="btn" onclick="exportFilteredData()">📊 Exportar</button>
             </div>
 
-            <table class="data-table" id="records-table">
-                <thead>
-                    <tr>
-                        <th>ID Ficha</th>
-                        <th>Serie</th>
-                        <th>Marca</th>
-                        <th>Modelo</th>
-                        <th>Año</th>
-                        <th>Landed Cost</th>
-                        <th>Estado</th>
-                        <th>Ubicación</th>
-                        <th>Cliente</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody id="records-tbody">
-                    <tr>
-                        <td colspan="10" style="text-align: center; padding: 3rem; color: #64748b;">
-                            No hay fichas registradas. <br>
-                            <button class="btn" onclick="showTab('nueva-ficha')" style="margin-top: 1rem;">Crear Primera Ficha</button>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+            <div style="overflow-x: auto;">
+                <table class="data-table" id="records-table">
+                    <thead>
+                        <tr>
+                            <th>ID Ficha</th>
+                            <th>Serie</th>
+                            <th>Marca</th>
+                            <th>Modelo</th>
+                            <th>Año</th>
+                            <th>Landed Cost</th>
+                            <th>Estado</th>
+                            <th>Ubicación</th>
+                            <th>Cliente</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="records-tbody">
+                        <tr>
+                            <td colspan="10" style="text-align: center; padding: 3rem; color: #64748b;">
+                                No hay fichas registradas. <br>
+                                <button class="btn" onclick="showTab('nueva-ficha')" style="margin-top: 1rem;">Crear
+                                    Primera Ficha</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
 
         <!-- Tab: Reportes -->
@@ -1050,37 +1332,25 @@
                 </div>
                 <div style="padding: 2rem;">
                     <div class="dashboard">
-                        <div class="metric-card">
-                            <button class="btn" onclick="generateConsolidatedReport()" style="width: 100%;">
-                                📋 Reporte Consolidado
-                            </button>
-                            <p style="margin-top: 1rem; font-size: 0.9rem; color: #64748b;">
-                                Todas las fichas en un documento
-                            </p>
+                        <div class="metric-card" style="cursor: pointer;" onclick="generateConsolidatedReport()">
+                            <div class="metric-icon">📋</div>
+                            <h3 style="margin: 1rem 0;">Reporte Consolidado</h3>
+                            <p style="color: #64748b; font-size: 0.9rem;">Todas las fichas en un documento</p>
                         </div>
-                        <div class="metric-card">
-                            <button class="btn" onclick="generateCostAnalysis()" style="width: 100%;">
-                                💰 Análisis de Costos
-                            </button>
-                            <p style="margin-top: 1rem; font-size: 0.9rem; color: #64748b;">
-                                Distribución y tendencias
-                            </p>
+                        <div class="metric-card" style="cursor: pointer;" onclick="generateCostAnalysis()">
+                            <div class="metric-icon">💰</div>
+                            <h3 style="margin: 1rem 0;">Análisis de Costos</h3>
+                            <p style="color: #64748b; font-size: 0.9rem;">Distribución y tendencias</p>
                         </div>
-                        <div class="metric-card">
-                            <button class="btn" onclick="generateInventoryReport()" style="width: 100%;">
-                                📦 Reporte de Inventario
-                            </button>
-                            <p style="margin-top: 1rem; font-size: 0.9rem; color: #64748b;">
-                                Stock actual y ubicaciones
-                            </p>
+                        <div class="metric-card" style="cursor: pointer;" onclick="generateInventoryReport()">
+                            <div class="metric-icon">📦</div>
+                            <h3 style="margin: 1rem 0;">Reporte de Inventario</h3>
+                            <p style="color: #64748b; font-size: 0.9rem;">Stock actual y ubicaciones</p>
                         </div>
-                        <div class="metric-card">
-                            <button class="btn" onclick="generateClientReport()" style="width: 100%;">
-                                👥 Reporte de Clientes
-                            </button>
-                            <p style="margin-top: 1rem; font-size: 0.9rem; color: #64748b;">
-                                Ventas por cliente
-                            </p>
+                        <div class="metric-card" style="cursor: pointer;" onclick="generateClientReport()">
+                            <div class="metric-icon">👥</div>
+                            <h3 style="margin: 1rem 0;">Reporte de Clientes</h3>
+                            <p style="color: #64748b; font-size: 0.9rem;">Ventas por cliente</p>
                         </div>
                     </div>
                 </div>
@@ -1094,7 +1364,7 @@
                     <h1>👥 Gestión de Clientes</h1>
                     <p>Base de datos de clientes y historial</p>
                 </div>
-                <div style="padding: 2rem;">
+                <div style="padding: 2rem; overflow-x: auto;">
                     <table class="data-table" id="clients-table">
                         <thead>
                             <tr>
@@ -1119,15 +1389,35 @@
         </div>
     </div>
 
+    <!-- Modal QR Code -->
+    <div id="qr-modal" class="modal hidden">
+        <div class="modal-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                <h2>📱 Código QR del Equipo</h2>
+                <button onclick="closeQRModal()"
+                    style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">✕</button>
+            </div>
+            <div style="text-align: center;">
+                <div id="qr-code-display"
+                    style="display: inline-block; padding: 2rem; background: white; border-radius: 12px;"></div>
+                <p style="margin-top: 1rem; color: #64748b;">Escanea este código para acceder rápido a la información
+                    del equipo</p>
+                <button class="btn" onclick="downloadQR()" style="margin-top: 1rem;">💾 Descargar QR</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal para reportes -->
     <div id="report-modal" class="modal hidden">
         <div class="modal-content">
-            <div style="display: flex; justify-content: between; align-items: center; margin-bottom: 2rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
                 <h2>📄 Reporte Generado</h2>
-                <button onclick="closeModal()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">✕</button>
+                <button onclick="closeModal()"
+                    style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">✕</button>
             </div>
             <div id="report-content"></div>
-            <div style="text-align: center; margin-top: 2rem;">
+            <div
+                style="text-align: center; margin-top: 2rem; display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
                 <button class="btn btn-secondary" onclick="printReport()">🖨️ Imprimir</button>
                 <button class="btn" onclick="downloadPDF()">📄 Descargar PDF</button>
                 <button class="btn" onclick="downloadExcel()">📊 Descargar Excel</button>
@@ -1137,15 +1427,56 @@
 
     <script>
         // Variables globales
-        let records = JSON.parse(localStorage.getItem('ttRecords') || '[]');
+        let records = [];
         let currentRecord = null;
         let costsChart = null;
-        let recordCounter = JSON.parse(localStorage.getItem('ttCounter') || '1');
+        let recordCounter = 1;
+        let dashboardCharts = {};
+        let qrInstance = null;
+        let isEditing = false;
+        let currentEditId = null;
+        const localKey = 'ttRecords';
+        const counterKey = 'ttCounter';
+
+        // Helper function para obtener elementos por ID
+        function $(id) {
+            return document.getElementById(id);
+        }
+
+        // Helper function para formatear moneda
+        function fmt(n) {
+            return '$' + (n || 0).toLocaleString('es-ES', { minimumFractionDigits: 2 });
+        }
+
+        // Helper function para parsear números
+        function num(id) {
+            const el = $(id);
+            return el ? parseFloat(el.value) || 0 : 0;
+        }
 
         // Inicialización
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
+            loadFromStorage();
             initializeApp();
         });
+
+        function loadFromStorage() {
+            const stored = localStorage.getItem(localKey);
+            const counter = localStorage.getItem(counterKey);
+
+            if (stored) {
+                try {
+                    records = JSON.parse(stored);
+                } catch (e) {
+                    console.error('Error parsing stored data:', e);
+                    records = [];
+                }
+            }
+
+            if (counter) {
+                recordCounter = parseInt(counter) || 1;
+            }
+        }
 
         function initializeApp() {
             updateFichaId();
@@ -1154,145 +1485,125 @@
             loadRecordsTable();
             updateDashboard();
             loadClientsTable();
-            
-            // Auto-guardar cada 30 segundos si hay cambios
-            setInterval(autoSave, 30000);
+            initializeDashboardCharts();
+
+            // Inicializar algunos valores por defecto
+            const today = new Date().toISOString().split('T')[0];
+            $('nationalization-date').value = today;
+            $('warehouse-date').value = today;
+            $('delivery-date').value = today;
         }
 
         function updateFichaId() {
             const fichaId = `FI-${new Date().getFullYear()}-${String(recordCounter).padStart(3, '0')}`;
-            document.getElementById('ficha-id').textContent = fichaId;
+            $('ficha-id').textContent = fichaId;
         }
 
         function updateDateFields() {
-            const today = new Date().toISOString().split('T')[0];
             const todayFormatted = new Date().toLocaleDateString('es-ES');
-            document.getElementById('fecha-creacion').textContent = todayFormatted;
+            $('fecha-creacion').textContent = todayFormatted;
         }
 
         function generateWarrantyId() {
             const warrantyId = 'WR-' + new Date().getFullYear() + '-' + Math.random().toString(36).substr(2, 6).toUpperCase();
-            document.getElementById('warranty-id').value = warrantyId;
-        }
-
-        function showTab(tabName) {
-            // Ocultar todos los tabs
-            document.querySelectorAll('.tab-content').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            document.querySelectorAll('.tab').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            
-            // Mostrar el tab seleccionado
-            document.getElementById(tabName).classList.add('active');
-            event.target.classList.add('active');
-            
-            // Actualizar datos si es necesario
-            if (tabName === 'lista-fichas') {
-                loadRecordsTable();
-            } else if (tabName === 'clientes') {
-                loadClientsTable();
-            }
+            $('warranty-id').value = warrantyId;
         }
 
         function toggleSection(sectionNumber) {
-            const section = document.getElementById(`section-${sectionNumber}`);
+            const section = $(`section-${sectionNumber}`);
             const isExpanded = section.classList.contains('expanded');
-            
-            // Cerrar todas las secciones
-            document.querySelectorAll('.section').forEach(s => {
-                s.classList.remove('expanded');
-            });
-            
-            // Abrir la sección clickeada si no estaba expandida
+
             if (!isExpanded) {
                 section.classList.add('expanded');
+            } else {
+                section.classList.remove('expanded');
             }
         }
 
         function toggleCostSection() {
-            const landedCostId = document.getElementById('landed-cost-id').value;
-            const costSection = document.getElementById('section-3');
-            
+            const landedCostId = $('landed-cost-id').value;
+            const costSection = $('section-3');
+
             if (landedCostId.trim() !== '') {
                 costSection.classList.remove('hidden');
                 setTimeout(() => {
-                    toggleSection(3);
+                    costSection.classList.add('expanded');
                 }, 100);
             } else {
                 costSection.classList.add('hidden');
+                costSection.classList.remove('expanded');
             }
         }
 
         function calculateLandedCost() {
             const costs = {
-                cif: parseFloat(document.getElementById('cif-value').value) || 0,
-                duties: parseFloat(document.getElementById('import-duties').value) || 0,
-                stats: parseFloat(document.getElementById('statistics-fee').value) || 0,
-                vat: parseFloat(document.getElementById('vat').value) || 0,
-                taxes: parseFloat(document.getElementById('other-taxes').value) || 0,
-                customs: parseFloat(document.getElementById('customs-fee').value) || 0,
-                freight: parseFloat(document.getElementById('internal-freight').value) || 0,
-                port: parseFloat(document.getElementById('port-expenses').value) || 0,
-                inspections: parseFloat(document.getElementById('inspections').value) || 0
+                cif: num('cif-value'),
+                duties: num('import-duties'),
+                stats: num('statistics-fee'),
+                vat: num('vat'),
+                taxes: num('other-taxes'),
+                customs: num('customs-fee'),
+                freight: num('internal-freight'),
+                port: num('port-expenses'),
+                inspections: num('inspections')
             };
 
-            // Actualizar resumen
-            document.getElementById('summary-cif').textContent = `$${costs.cif.toLocaleString()}`;
-            document.getElementById('summary-duties').textContent = `$${costs.duties.toLocaleString()}`;
-            document.getElementById('summary-stats').textContent = `$${costs.stats.toLocaleString()}`;
-            document.getElementById('summary-vat').textContent = `$${costs.vat.toLocaleString()}`;
-            document.getElementById('summary-taxes').textContent = `$${costs.taxes.toLocaleString()}`;
-            document.getElementById('summary-customs').textContent = `$${costs.customs.toLocaleString()}`;
-            document.getElementById('summary-freight').textContent = `$${costs.freight.toLocaleString()}`;
-            document.getElementById('summary-port').textContent = `$${costs.port.toLocaleString()}`;
-            document.getElementById('summary-inspections').textContent = `$${costs.inspections.toLocaleString()}`;
-
             const total = Object.values(costs).reduce((sum, cost) => sum + cost, 0);
-            document.getElementById('total-lccu').textContent = `$${total.toLocaleString()}`;
 
-            updateCostsChart(costs);
-            return total;
+            // Actualizar resumen
+            $('summary-cif').textContent = fmt(costs.cif);
+            $('summary-duties').textContent = fmt(costs.duties);
+            $('summary-stats').textContent = fmt(costs.stats);
+            $('summary-vat').textContent = fmt(costs.vat);
+            $('summary-taxes').textContent = fmt(costs.taxes);
+            $('summary-customs').textContent = fmt(costs.customs);
+            $('summary-freight').textContent = fmt(costs.freight);
+            $('summary-port').textContent = fmt(costs.port);
+            $('summary-inspections').textContent = fmt(costs.inspections);
+            $('total-lccu').textContent = fmt(total);
+
+            // Actualizar gráfico
+            drawCostsChart([
+                costs.cif,
+                costs.duties,
+                costs.stats,
+                costs.vat,
+                costs.taxes,
+                costs.customs,
+                costs.freight,
+                costs.port,
+                costs.inspections
+            ]);
         }
 
-        function updateCostsChart(costs) {
-            const ctx = document.getElementById('costsChart').getContext('2d');
-            
+        function drawCostsChart(data) {
+            const ctx = $('costsChart');
+            if (!ctx) return;
+
             if (costsChart) {
                 costsChart.destroy();
             }
 
-            const data = {
-                labels: ['Valor CIF', 'Derechos', 'Tasa Est.', 'IVA', 'Otros Imp.', 'Despachante', 'Flete', 'Puerto', 'Inspecciones'],
-                datasets: [{
-                    data: Object.values(costs),
-                    backgroundColor: [
-                        '#4a8b3c',
-                        '#2d5a27',
-                        '#6ba356',
-                        '#8bc34a',
-                        '#9ccc65',
-                        '#aed581',
-                        '#c5e1a5',
-                        '#dcedc8',
-                        '#f1f8e9'
-                    ]
-                }]
-            };
-
             costsChart = new Chart(ctx, {
-                type: 'doughnut',
-                data: data,
+                type: 'bar',
+                data: {
+                    labels: ['CIF', 'Derechos', 'Estadística', 'IVA', 'Otros', 'Despachante', 'Flete', 'Puerto', 'Inspecciones'],
+                    datasets: [{
+                        label: 'USD',
+                        data: data,
+                        backgroundColor: 'rgba(102, 126, 234, 0.7)'
+                    }]
+                },
                 options: {
                     responsive: true,
                     plugins: {
                         legend: {
-                            position: 'bottom'
-                        },
-                        title: {
-                            display: true,
-                            text: 'Distribución de Costos de Importación'
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
                         }
                     }
                 }
@@ -1300,374 +1611,591 @@
         }
 
         function updateStatusBadge() {
-            const status = document.getElementById('commercial-status').value;
-            const badge = document.getElementById('status-badge');
-            
-            badge.className = 'status-badge';
-            
+            const status = $('commercial-status').value;
+            const badge = $('status-badge');
+
             if (status) {
+                badge.className = `status-badge status-${status}`;
+                badge.textContent = $('commercial-status').options[$('commercial-status').selectedIndex].text;
                 badge.classList.remove('hidden');
-                badge.classList.add(`status-${status}`);
-                
-                const statusText = {
-                    'disponible': 'Disponible',
-                    'reservado': 'Reservado',
-                    'transito': 'En Tránsito',
-                    'entregado': 'Entregado'
-                };
-                
-                badge.textContent = statusText[status];
             } else {
                 badge.classList.add('hidden');
             }
         }
 
         function toggleClaimable() {
-            const rootCause = document.getElementById('root-cause').value;
-            const claimableCheckbox = document.getElementById('claimable');
-            const claimStatus = document.getElementById('claim-status');
-            
-            const claimableCauses = ['defecto-fabricacion', 'error-instalacion'];
-            
-            if (claimableCauses.includes(rootCause)) {
-                claimableCheckbox.checked = true;
-                claimableCheckbox.disabled = false;
-                claimStatus.textContent = 'Reclamable - Defecto del proveedor';
-                claimStatus.style.color = '#dc3545';
-            } else if (rootCause) {
-                claimableCheckbox.checked = false;
-                claimableCheckbox.disabled = true;
-                claimStatus.textContent = 'No reclamable - Responsabilidad del usuario';
-                claimStatus.style.color = '#6c757d';
+            const cause = $('root-cause').value;
+            const claimable = $('claimable');
+            const claimStatus = $('claim-status');
+
+            if (cause === 'defecto-fabricacion') {
+                claimable.checked = true;
+                claimStatus.textContent = 'Reclamable al proveedor';
             } else {
-                claimableCheckbox.checked = false;
-                claimableCheckbox.disabled = true;
-                claimStatus.textContent = 'Determinado por causa raíz';
-                claimStatus.style.color = '#6c757d';
+                claimable.checked = false;
+                claimStatus.textContent = 'No reclamable';
             }
         }
 
         function calculateTotalCost() {
-            const laborHours = parseFloat(document.getElementById('labor-hours').value) || 0;
-            const partsCost = parseFloat(document.getElementById('parts-cost').value) || 0;
-            const otherCosts = parseFloat(document.getElementById('other-costs').value) || 0;
-            
-            const laborRate = 50;
-            const laborCost = laborHours * laborRate;
-            
-            const totalCost = laborCost + partsCost + otherCosts;
-            document.getElementById('total-internal-cost').value = totalCost.toFixed(2);
+            const laborHours = num('labor-hours');
+            const partsCost = num('parts-cost');
+            const otherCosts = num('other-costs');
+
+            // Suponiendo $25 por hora de trabajo
+            const laborCost = laborHours * 25;
+            const total = laborCost + partsCost + otherCosts;
+
+            $('total-internal-cost').value = total.toFixed(2);
         }
 
-        function validateForm() {
-            const requiredFields = [
-                'serial-number', 'brand', 'model', 'year',
-                'hts-code', 'tariff-position', 'import-id', 'nationalization-date', 'landed-cost-id',
-                'cif-value', 'import-duties', 'statistics-fee', 'vat', 'customs-fee', 
-                'internal-freight', 'port-expenses', 'inspections'
-            ];
-
-            const errors = [];
-            
-            requiredFields.forEach(fieldId => {
-                const field = document.getElementById(fieldId);
-                if (!field.value || field.value.trim() === '') {
-                    errors.push(`${field.previousElementSibling.textContent} es requerido`);
-                }
-            });
-
-            return errors;
-        }
-
-        function collectFormData() {
-            const data = {
-                id: document.getElementById('ficha-id').textContent,
-                timestamp: new Date().toISOString(),
-                // Identificación
-                serialNumber: document.getElementById('serial-number').value,
-                brand: document.getElementById('brand').value,
-                model: document.getElementById('model').value,
-                year: document.getElementById('year').value,
-                // Trazabilidad fiscal
-                htsCode: document.getElementById('hts-code').value,
-                tariffPosition: document.getElementById('tariff-position').value,
-                importId: document.getElementById('import-id').value,
-                nationalizationDate: document.getElementById('nationalization-date').value,
-                landedCostId: document.getElementById('landed-cost-id').value,
-                // Costeo
-                costs: {
-                    cif: parseFloat(document.getElementById('cif-value').value) || 0,
-                    duties: parseFloat(document.getElementById('import-duties').value) || 0,
-                    stats: parseFloat(document.getElementById('statistics-fee').value) || 0,
-                    vat: parseFloat(document.getElementById('vat').value) || 0,
-                    taxes: parseFloat(document.getElementById('other-taxes').value) || 0,
-                    customs: parseFloat(document.getElementById('customs-fee').value) || 0,
-                    freight: parseFloat(document.getElementById('internal-freight').value) || 0,
-                    port: parseFloat(document.getElementById('port-expenses').value) || 0,
-                    inspections: parseFloat(document.getElementById('inspections').value) || 0
+        function simulateQRScan(type = 'excavadora') {
+            const samples = {
+                excavadora: {
+                    brand: 'Caterpillar',
+                    model: '320D',
+                    year: '2022',
+                    serial: 'CAT0320DABZ123456'
                 },
-                landedCost: calculateLandedCost(),
-                // Estado operacional
-                warehouseDate: document.getElementById('warehouse-date').value,
-                fiscalLocation: document.getElementById('fiscal-location').value,
-                commercialStatus: document.getElementById('commercial-status').value,
-                // Trazabilidad comercial
-                invoiceNumber: document.getElementById('invoice-number').value,
-                clientName: document.getElementById('client-name').value,
-                clientCuit: document.getElementById('client-cuit').value,
-                deliveryDate: document.getElementById('delivery-date').value,
-                // Postventa
-                warrantyId: document.getElementById('warranty-id').value,
-                technician: document.getElementById('technician').value,
-                diagnosis: document.getElementById('diagnosis').value,
-                rootCause: document.getElementById('root-cause').value,
-                failedComponent: document.getElementById('failed-component').value,
-                claimable: document.getElementById('claimable').checked,
-                laborHours: parseFloat(document.getElementById('labor-hours').value) || 0,
-                partsCost: parseFloat(document.getElementById('parts-cost').value) || 0,
-                otherCosts: parseFloat(document.getElementById('other-costs').value) || 0,
-                totalInternalCost: parseFloat(document.getElementById('total-internal-cost').value) || 0,
-                caseResolution: document.getElementById('case-resolution').value
+                retroexcavadora: {
+                    brand: 'John Deere',
+                    model: '310',
+                    year: '2021',
+                    serial: 'JD310CD987654'
+                },
+                camion: {
+                    brand: 'Volvo',
+                    model: 'FH16',
+                    year: '2023',
+                    serial: 'VOLFH16XYZ789012'
+                }
             };
 
-            return data;
+            const sample = samples[type] || samples.excavadora;
+
+            $('serial-number').value = sample.serial;
+            $('brand').value = sample.brand;
+            $('model').value = sample.model;
+            $('year').value = sample.year;
+
+            $('scanned-data').style.display = 'block';
+            showTab('nueva-ficha');
+
+            generateQRCode();
         }
 
-        function saveRecord() {
-            const errors = validateForm();
-            
-            if (errors.length > 0) {
-                alert('Por favor complete los siguientes campos obligatorios:\n\n' + errors.join('\n'));
+        function generateQRCode() {
+            const serial = $('serial-number').value;
+            const brand = $('brand').value;
+            const model = $('model').value;
+            const year = $('year').value;
+
+            if (!serial || !brand || !model || !year) {
+                alert('Por favor, complete los datos básicos del equipo antes de generar el QR');
                 return;
             }
 
-            const data = collectFormData();
-            
-            // Agregar a records
-            records.push(data);
-            localStorage.setItem('ttRecords', JSON.stringify(records));
-            
-            // Incrementar counter
-            recordCounter++;
-            localStorage.setItem('ttCounter', JSON.stringify(recordCounter));
-            
-            // Mostrar mensaje de éxito
-            showAlert('Ficha guardada exitosamente!', 'success');
-            
-            // Actualizar interfaz
-            updateDashboard();
-            loadRecordsTable();
-            loadClientsTable();
-            
-            // Limpiar formulario
-            setTimeout(() => {
-                resetForm();
-            }, 2000);
+            const data = `Equipo: ${brand} ${model}\nSerie: ${serial}\nAño: ${year}\nID: ${$('ficha-id').textContent}`;
+
+            const qrDisplay = $('qr-display');
+            const qrcodeDiv = $('qrcode');
+
+            // Limpiar QR anterior
+            qrcodeDiv.innerHTML = '';
+
+            // Generar nuevo QR
+            qrInstance = new QRCode(qrcodeDiv, {
+                text: data,
+                width: 180,
+                height: 180,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+
+            qrDisplay.classList.remove('hidden');
         }
 
-        function saveAsDraft() {
-            const data = collectFormData();
-            data.status = 'draft';
-            localStorage.setItem('ttDraft', JSON.stringify(data));
-            showAlert('Borrador guardado!', 'success');
+        function saveRecord() {
+            console.log('Guardando registro, isEditing:', isEditing, 'currentEditId:', currentEditId); // Para debug
+
+            // Validar campos requeridos
+            const requiredFields = [
+                'serial-number', 'brand', 'model', 'year',
+                'hts-code', 'tariff-position', 'import-id',
+                'nationalization-date', 'landed-cost-id', 'cif-value'
+            ];
+
+            for (const fieldId of requiredFields) {
+                const field = $(fieldId);
+                if (!field || !field.value.trim()) {
+                    const label = document.querySelector(`label[for="${fieldId}"]`);
+                    alert(`El campo "${label ? label.textContent.replace('*', '').trim() : fieldId}" es obligatorio`);
+                    if (field) field.focus();
+                    return;
+                }
+            }
+
+            // Crear objeto de registro
+            const record = {
+                id: isEditing ? currentEditId : $('ficha-id').textContent,
+                serial: $('serial-number').value.trim(),
+                brand: $('brand').value.trim(),
+                model: $('model').value.trim(),
+                year: $('year').value.trim(),
+                hts: $('hts-code').value.trim(),
+                tariff: $('tariff-position').value.trim(),
+                importId: $('import-id').value.trim(),
+                nationalization: $('nationalization-date').value,
+                landedCostId: $('landed-cost-id').value.trim(),
+                cif: num('cif-value'),
+                duties: num('import-duties'),
+                stats: num('statistics-fee'),
+                vat: num('vat'),
+                taxes: num('other-taxes'),
+                customs: num('customs-fee'),
+                freight: num('internal-freight'),
+                port: num('port-expenses'),
+                inspections: num('inspections'),
+                totalLanded: calculateTotalLandedCost(),
+                warehouse: $('warehouse-date').value,
+                fiscalLocation: $('fiscal-location').value,
+                commercialStatus: $('commercial-status').value,
+                invoice: $('invoice-number').value.trim(),
+                client: $('client-name').value.trim(),
+                cuit: $('client-cuit').value.trim(),
+                delivery: $('delivery-date').value,
+                warranty: $('warranty-id').value.trim(),
+                technician: $('technician').value,
+                diagnosis: $('diagnosis').value.trim(),
+                rootCause: $('root-cause').value,
+                component: $('failed-component').value,
+                claimable: $('claimable').checked,
+                labor: num('labor-hours'),
+                parts: num('parts-cost'),
+                others: num('other-costs'),
+                totalInternal: num('total-internal-cost'),
+                resolution: $('case-resolution').value,
+                updatedAt: new Date().toISOString()
+            };
+
+            function calculateTotalLandedCost() {
+                return num('cif-value') +
+                    num('import-duties') +
+                    num('statistics-fee') +
+                    num('vat') +
+                    num('other-taxes') +
+                    num('customs-fee') +
+                    num('internal-freight') +
+                    num('port-expenses') +
+                    num('inspections');
+            }
+
+            if (isEditing && currentEditId) {
+                console.log('Actualizando registro existente:', currentEditId); // Para debug
+                // Actualizar registro existente
+                const index = records.findIndex(r => r.id === currentEditId);
+                if (index !== -1) {
+                    // Mantener la fecha de creación original
+                    record.createdAt = records[index].createdAt;
+                    records[index] = record;
+
+                    // Actualizar localStorage
+                    localStorage.setItem(localKey, JSON.stringify(records));
+
+                    // Actualizar UI
+                    loadRecordsTable();
+                    updateDashboard();
+                    loadClientsTable();
+                    updateDashboardCharts();
+
+                    // Agregar actividad
+                    addActivity(`Ficha ${record.id} actualizada - ${record.brand} ${record.model}`);
+
+                    // Mostrar confirmación
+                    alert('✅ Ficha actualizada exitosamente!');
+
+                    // Restaurar modo normal
+                    exitEditMode();
+                } else {
+                    alert('Error: No se encontró la ficha para editar');
+                }
+            } else {
+                console.log('Creando nuevo registro'); // Para debug
+                // Guardar nuevo registro
+                record.createdAt = new Date().toISOString();
+                records.push(record);
+                localStorage.setItem(localKey, JSON.stringify(records));
+
+                // Incrementar contador solo para nuevas fichas
+                recordCounter++;
+                localStorage.setItem(counterKey, recordCounter);
+
+                // Actualizar UI
+                updateFichaId();
+                loadRecordsTable();
+                updateDashboard();
+                loadClientsTable();
+                updateDashboardCharts();
+
+                // Agregar actividad
+                addActivity(`Ficha ${record.id} creada - ${record.brand} ${record.model}`);
+
+                // Mostrar confirmación
+                alert('✅ Ficha guardada exitosamente!');
+
+                // Limpiar formulario para nueva entrada
+                resetForm();
+            }
+        }
+
+        function exitEditMode() {
+            console.log('Saliendo del modo edición'); // Para debug
+            isEditing = false;
+            currentEditId = null;
+
+            // Restaurar botón de guardar
+            const saveButton = $('#save-button');
+            if (saveButton) {
+                saveButton.textContent = '✅ Guardar Ficha';
+                saveButton.onclick = function () { saveRecord(); };
+            }
+
+            // Ocultar botón de cancelar
+            const cancelButton = $('#cancel-edit-btn');
+            if (cancelButton) {
+                cancelButton.classList.add('hidden');
+            }
+
+            // Limpiar formulario
+            resetForm();
+        }
+
+        function resetSaveButton() {
+            const saveButton = $('#save-button');
+            if (saveButton) {
+                saveButton.textContent = '✅ Guardar Ficha';
+                saveButton.onclick = function () { saveRecord(); };
+            }
         }
 
         function resetForm() {
-            document.querySelectorAll('input, select, textarea').forEach(field => {
-                if (field.id !== 'warranty-id' && field.id !== 'ficha-id' && field.id !== 'fecha-creacion') {
-                    field.value = '';
-                    field.checked = false;
+            // Resetear todos los campos excepto algunos
+            const form = document.getElementById('nueva-ficha');
+            const inputs = form.querySelectorAll('input, select, textarea');
+
+            inputs.forEach(input => {
+                if (input.id === 'ficha-id' || input.id === 'fecha-creacion') {
+                    // No resetear estos
+                    return;
+                }
+
+                if (input.type === 'checkbox') {
+                    input.checked = false;
+                } else if (input.type === 'date') {
+                    // Establecer fecha actual para algunos campos
+                    const today = new Date().toISOString().split('T')[0];
+                    if (input.id === 'nationalization-date' ||
+                        input.id === 'warehouse-date' ||
+                        input.id === 'delivery-date') {
+                        input.value = today;
+                    } else {
+                        input.value = '';
+                    }
+                } else if (input.id === 'warranty-id') {
+                    generateWarrantyId();
+                } else {
+                    input.value = '';
                 }
             });
-            
-            // Regenerar IDs
-            recordCounter++;
-            localStorage.setItem('ttCounter', JSON.stringify(recordCounter));
-            updateFichaId();
-            generateWarrantyId();
-            
-            // Resetear gráfico
-            if (costsChart) {
-                updateCostsChart({
-                    cif: 0, duties: 0, stats: 0, vat: 0, taxes: 0, 
-                    customs: 0, freight: 0, port: 0, inspections: 0
-                });
+
+            // Resetear sección de costos
+            $('section-3').classList.add('hidden');
+            $('section-3').classList.remove('expanded');
+
+            // Resetear QR
+            $('qr-display').classList.add('hidden');
+            const qrcodeDiv = $('qrcode');
+            if (qrcodeDiv) {
+                qrcodeDiv.innerHTML = '';
             }
-            
-            // Cerrar secciones
-            document.querySelectorAll('.section').forEach(section => {
-                section.classList.remove('expanded');
-            });
-            document.getElementById('section-1').classList.add('expanded');
-            document.getElementById('section-3').classList.add('hidden');
-            
-            showAlert('Formulario limpiado', 'success');
+
+            // Resetear badges
+            $('status-badge').classList.add('hidden');
+
+            // Generar nuevo ID para la próxima ficha (solo si no estamos editando)
+            if (!isEditing) {
+                updateFichaId();
+            }
+        }
+
+        function cancelEdit() {
+            console.log('Cancelando edición'); // Para debug
+            exitEditMode();
+            alert('✖️ Edición cancelada');
+        }
+
+        function saveAsDraft() {
+            // Similar a saveRecord pero sin validaciones estrictas
+            const record = {
+                id: $('ficha-id').textContent,
+                serial: $('serial-number').value.trim(),
+                brand: $('brand').value.trim(),
+                model: $('model').value.trim(),
+                year: $('year').value.trim(),
+                createdAt: new Date().toISOString(),
+                isDraft: true
+            };
+
+            records.push(record);
+            localStorage.setItem(localKey, JSON.stringify(records));
+
+            recordCounter++;
+            localStorage.setItem(counterKey, recordCounter);
+
+            updateFichaId();
+            loadRecordsTable();
+            updateDashboard();
+
+            addActivity(`Borrador ${record.id} guardado`);
+
+            alert('💾 Borrador guardado exitosamente!');
+
+            resetForm();
         }
 
         function loadRecordsTable() {
-            const tbody = document.getElementById('records-tbody');
-            
-            if (records.length === 0) {
+            const tbody = $('records-tbody');
+
+            if (!records || records.length === 0) {
                 tbody.innerHTML = `
                     <tr>
                         <td colspan="10" style="text-align: center; padding: 3rem; color: #64748b;">
                             No hay fichas registradas. <br>
-                            <button class="btn" onclick="showTab('nueva-ficha')" style="margin-top: 1rem;">Crear Primera Ficha</button>
+                            <button class="btn" onclick="showTab('nueva-ficha')" style="margin-top: 1rem;">
+                                Crear Primera Ficha
+                            </button>
                         </td>
                     </tr>
                 `;
                 return;
             }
 
-            tbody.innerHTML = records.map((record, index) => `
-                <tr>
-                    <td><strong>${record.id}</strong>
-                        <br><small>${new Date(record.timestamp).toLocaleDateString('es-ES')}</small>
-                    </td>
-                    <td>${record.serialNumber}</td>
-                    <td>${record.brand}</td>
-                    <td>${record.model}</td>
-                    <td>${record.year}</td>
-                    <td><strong>$${record.landedCost.toLocaleString()}</strong></td>
-                    <td>
-                        <span class="status-badge status-${record.commercialStatus || 'disponible'}">
-                            ${record.commercialStatus ? record.commercialStatus.charAt(0).toUpperCase() + record.commercialStatus.slice(1) : 'N/A'}
-                        </span>
-                    </td>
-                    <td>${record.fiscalLocation || 'N/A'}</td>
-                    <td>${record.clientName || 'N/A'}
-                        <br><small>${record.clientCuit || ''}</small>
-                    </td>
-                    <td>
-                        <button class="btn" onclick="viewRecord(${index})" style="padding: 0.5rem; margin: 0.2rem;">👁️</button>
-                        <button class="btn" onclick="editRecord(${index})" style="padding: 0.5rem; margin: 0.2rem;">✏️</button>
-                        <button class="btn btn-danger" onclick="deleteRecord(${index})" style="padding: 0.5rem; margin: 0.2rem;">🗑️</button>
-                    </td>
-                </tr>
-            `).join('');
-        }
+            let html = '';
+            records.forEach(record => {
+                const statusClass = `status-${record.commercialStatus || 'disponible'}`;
+                const statusText = record.commercialStatus ?
+                    record.commercialStatus.charAt(0).toUpperCase() + record.commercialStatus.slice(1) :
+                    'Disponible';
 
-        function viewRecord(index) {
-            const record = records[index];
-            generateIndividualReport(record);
-        }
-
-        function editRecord(index) {
-            // Cargar datos en el formulario
-            const record = records[index];
-            
-            // Llenar todos los campos
-            Object.keys(record).forEach(key => {
-                const element = document.querySelector(`[id*="${key.replace(/([A-Z])/g, '-$1').toLowerCase()}"]`);
-                if (element) {
-                    if (element.type === 'checkbox') {
-                        element.checked = record[key];
-                    } else {
-                        element.value = record[key];
-                    }
-                }
+                html += `
+                    <tr>
+                        <td>${record.id}</td>
+                        <td>${record.serial}</td>
+                        <td>${record.brand}</td>
+                        <td>${record.model}</td>
+                        <td>${record.year}</td>
+                        <td>${fmt(record.totalLanded || 0)}</td>
+                        <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                        <td>${record.fiscalLocation || 'Stock'}</td>
+                        <td>${record.client || '—'}</td>
+                        <td>
+                            <div class="table-actions">
+                                <button class="btn" onclick="viewRecord('${record.id}')" title="Ver">👁️</button>
+                                <button class="btn btn-secondary" onclick="editRecord('${record.id}')" title="Editar">✏️</button>
+                                <button class="btn btn-danger" onclick="deleteRecord('${record.id}')" title="Eliminar">🗑️</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
             });
-            
-            // Llenar costos
-            if (record.costs) {
-                Object.keys(record.costs).forEach(key => {
-                    const element = document.getElementById(key === 'cif' ? 'cif-value' : 
-                                                        key === 'duties' ? 'import-duties' :
-                                                        key === 'stats' ? 'statistics-fee' :
-                                                        key === 'taxes' ? 'other-taxes' :
-                                                        key === 'customs' ? 'customs-fee' :
-                                                        key === 'freight' ? 'internal-freight' :
-                                                        key === 'port' ? 'port-expenses' :
-                                                        key);
-                    if (element) {
-                        element.value = record.costs[key];
-                    }
-                });
-            }
-            
-            // Eliminar record original para actualización
-            records.splice(index, 1);
-            localStorage.setItem('ttRecords', JSON.stringify(records));
-            
-            // Cambiar a tab de nueva ficha
-            showTab('nueva-ficha');
-            calculateLandedCost();
-            updateStatusBadge();
-            
-            showAlert('Registro cargado para edición', 'success');
-        }
 
-        function deleteRecord(index) {
-            if (confirm('¿Está seguro de eliminar este registro?')) {
-                records.splice(index, 1);
-                localStorage.setItem('ttRecords', JSON.stringify(records));
-                loadRecordsTable();
-                updateDashboard();
-                showAlert('Registro eliminado', 'success');
-            }
+            tbody.innerHTML = html;
         }
 
         function filterRecords() {
-            const searchTerm = document.getElementById('search-input').value.toLowerCase();
-            const statusFilter = document.getElementById('status-filter').value;
-            const locationFilter = document.getElementById('location-filter').value;
-            
-            const tbody = document.getElementById('records-tbody');
-            const rows = tbody.getElementsByTagName('tr');
-            
-            Array.from(rows).forEach(row => {
-                if (row.cells.length < 10) return; // Skip empty row
-                
-                const text = row.textContent.toLowerCase();
-                const status = row.cells[6].textContent.toLowerCase();
-                const location = row.cells[7].textContent.toLowerCase();
-                
-                const matchesSearch = text.includes(searchTerm);
-                const matchesStatus = !statusFilter || status.includes(statusFilter);
-                const matchesLocation = !locationFilter || location.includes(locationFilter);
-                
-                row.style.display = (matchesSearch && matchesStatus && matchesLocation) ? '' : 'none';
+            const searchTerm = $('search-input').value.toLowerCase();
+            const statusFilter = $('status-filter').value;
+            const locationFilter = $('location-filter').value;
+
+            const rows = document.querySelectorAll('#records-tbody tr');
+
+            rows.forEach(row => {
+                const rowText = row.textContent.toLowerCase();
+                const statusMatch = !statusFilter ||
+                    row.querySelector('.status-badge').classList.contains(`status-${statusFilter}`);
+                const locationMatch = !locationFilter ||
+                    row.cells[7].textContent.toLowerCase().includes(locationFilter);
+
+                if (rowText.includes(searchTerm) && statusMatch && locationMatch) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
             });
         }
 
-        function updateDashboard() {
-            const totalRecords = records.length;
-            const totalValue = records.reduce((sum, record) => sum + (record.landedCost || 0), 0);
-            const stockCount = records.filter(r => r.fiscalLocation === 'stock').length;
-            const soldCount = records.filter(r => r.fiscalLocation === 'vendido').length;
-            
-            document.getElementById('total-records').textContent = totalRecords;
-            document.getElementById('total-value').textContent = `$${totalValue.toLocaleString()}`;
-            document.getElementById('stock-count').textContent = stockCount;
-            document.getElementById('sold-count').textContent = soldCount;
+        function viewRecord(id) {
+            const record = records.find(r => r.id === id);
+            if (!record) return;
+
+            alert(`📋 Detalle de Ficha:\n\n` +
+                `ID: ${record.id}\n` +
+                `Serie: ${record.serial}\n` +
+                `Marca: ${record.brand}\n` +
+                `Modelo: ${record.model}\n` +
+                `Año: ${record.year}\n` +
+                `Landed Cost: ${fmt(record.totalLanded || 0)}\n` +
+                `Estado: ${record.commercialStatus || 'No definido'}\n` +
+                `Cliente: ${record.client || 'No asignado'}\n` +
+                `Creado: ${new Date(record.createdAt).toLocaleDateString('es-ES')}`);
+        }
+
+        function editRecord(id) {
+            const record = records.find(r => r.id === id);
+            if (!record) {
+                alert('No se encontró la ficha para editar');
+                return;
+            }
+
+            console.log('Editando ficha:', id); // Para debug
+
+            // Activar modo edición
+            isEditing = true;
+            currentEditId = id;
+
+            // Cargar datos en el formulario
+            $('serial-number').value = record.serial || '';
+            $('brand').value = record.brand || '';
+            $('model').value = record.model || '';
+            $('year').value = record.year || '';
+            $('hts-code').value = record.hts || '';
+            $('tariff-position').value = record.tariff || '';
+            $('import-id').value = record.importId || '';
+            $('nationalization-date').value = record.nationalization || '';
+            $('landed-cost-id').value = record.landedCostId || '';
+            $('cif-value').value = record.cif || 0;
+            $('import-duties').value = record.duties || 0;
+            $('statistics-fee').value = record.stats || 0;
+            $('vat').value = record.vat || 0;
+            $('other-taxes').value = record.taxes || 0;
+            $('customs-fee').value = record.customs || 0;
+            $('internal-freight').value = record.freight || 0;
+            $('port-expenses').value = record.port || 0;
+            $('inspections').value = record.inspections || 0;
+
+            // Activar sección de costos si hay landedCostId
+            if (record.landedCostId) {
+                $('section-3').classList.remove('hidden');
+                $('section-3').classList.add('expanded');
+            }
+
+            $('warehouse-date').value = record.warehouse || '';
+            $('fiscal-location').value = record.fiscalLocation || '';
+            $('commercial-status').value = record.commercialStatus || '';
+            updateStatusBadge();
+
+            $('invoice-number').value = record.invoice || '';
+            $('client-name').value = record.client || '';
+            $('client-cuit').value = record.cuit || '';
+            $('delivery-date').value = record.delivery || '';
+
+            $('warranty-id').value = record.warranty || generateWarrantyId();
+            $('technician').value = record.technician || '';
+            $('diagnosis').value = record.diagnosis || '';
+            $('root-cause').value = record.rootCause || '';
+            $('failed-component').value = record.component || '';
+            $('claimable').checked = record.claimable || false;
+            toggleClaimable(); // Actualizar estado del checkbox
+            $('labor-hours').value = record.labor || 0;
+            $('parts-cost').value = record.parts || 0;
+            $('other-costs').value = record.others || 0;
+            $('total-internal-cost').value = record.totalInternal || 0;
+            $('case-resolution').value = record.resolution || '';
+
+            // Actualizar ID de ficha con el ID original
+            $('ficha-id').textContent = record.id;
+
+            // Cambiar texto del botón para indicar que estamos editando
+            const saveButton = $('#save-button');
+            if (saveButton) {
+                saveButton.textContent = '💾 Guardar Cambios';
+                console.log('Botón de guardar actualizado'); // Para debug
+            }
+
+            // Mostrar botón de cancelar edición
+            const cancelButton = $('#cancel-edit-btn');
+            if (cancelButton) {
+                cancelButton.classList.remove('hidden');
+                console.log('Botón de cancelar mostrado'); // Para debug
+            }
+
+            // Mostrar pestaña de nueva ficha
+            showTab('nueva-ficha');
+
+            // Recalcular costos si es necesario
+            if (record.cif) {
+                calculateLandedCost();
+            }
+
+            alert(`✏️ Editando ficha ${id}. Los cambios se guardarán sobre el registro existente.`);
+        }
+
+        function deleteRecord(id) {
+            if (!confirm(`¿Está seguro de eliminar la ficha ${id}?`)) {
+                return;
+            }
+
+            // Eliminar del array
+            const index = records.findIndex(r => r.id === id);
+            if (index !== -1) {
+                records.splice(index, 1);
+
+                // Actualizar localStorage
+                localStorage.setItem(localKey, JSON.stringify(records));
+
+                // Actualizar UI
+                loadRecordsTable();
+                updateDashboard();
+                loadClientsTable();
+                updateDashboardCharts();
+
+                addActivity(`Ficha ${id} eliminada`);
+
+                alert('🗑️ Ficha eliminada exitosamente!');
+            }
         }
 
         function loadClientsTable() {
-            const clients = {};
-            
+            const tbody = $('clients-tbody');
+
+            // Agrupar por cliente
+            const clientsMap = {};
+
             records.forEach(record => {
-                if (record.clientName && record.clientCuit) {
-                    if (!clients[record.clientCuit]) {
-                        clients[record.clientCuit] = {
-                            name: record.clientName,
-                            cuit: record.clientCuit,
+                if (record.client) {
+                    if (!clientsMap[record.client]) {
+                        clientsMap[record.client] = {
+                            cuit: record.cuit || '',
                             totalPurchases: 0,
                             equipmentCount: 0,
-                            lastPurchase: record.deliveryDate || record.timestamp
+                            lastPurchase: ''
                         };
                     }
-                    clients[record.clientCuit].totalPurchases += record.landedCost || 0;
-                    clients[record.clientCuit].equipmentCount++;
-                    
-                    if (record.deliveryDate > clients[record.clientCuit].lastPurchase) {
-                        clients[record.clientCuit].lastPurchase = record.deliveryDate;
+
+                    clientsMap[record.client].totalPurchases += record.totalLanded || 0;
+                    clientsMap[record.client].equipmentCount++;
+
+                    if (!clientsMap[record.client].lastPurchase ||
+                        record.createdAt > clientsMap[record.client].lastPurchase) {
+                        clientsMap[record.client].lastPurchase = record.createdAt;
                     }
                 }
             });
-            
-            const tbody = document.getElementById('clients-tbody');
-            
-            if (Object.keys(clients).length === 0) {
+
+            const clients = Object.entries(clientsMap);
+
+            if (clients.length === 0) {
                 tbody.innerHTML = `
                     <tr>
                         <td colspan="6" style="text-align: center; padding: 3rem; color: #64748b;">
@@ -1677,413 +2205,504 @@
                 `;
                 return;
             }
-            
-            tbody.innerHTML = Object.values(clients).map(client => `
-                <tr>
-                    <td><strong>${client.name}</strong></td>
-                    <td>${client.cuit}</td>
-                    <td><strong>$${client.totalPurchases.toLocaleString()}</strong></td>
-                    <td>${client.equipmentCount}</td>
-                    <td>${client.lastPurchase ? new Date(client.lastPurchase).toLocaleDateString('es-ES') : 'N/A'}</td>
-                    <td>
-                        <button class="btn" onclick="generateClientReport('${client.cuit}')" style="padding: 0.5rem;">📄</button>
-                    </td>
-                </tr>
-            `).join('');
+
+            let html = '';
+            clients.forEach(([clientName, data]) => {
+                html += `
+                    <tr>
+                        <td>${clientName}</td>
+                        <td>${data.cuit || '—'}</td>
+                        <td>${fmt(data.totalPurchases)}</td>
+                        <td>${data.equipmentCount}</td>
+                        <td>${data.lastPurchase ? new Date(data.lastPurchase).toLocaleDateString('es-ES') : '—'}</td>
+                        <td>
+                            <div class="table-actions">
+                                <button class="btn" onclick="viewClientDetail('${clientName}')" title="Ver detalle">👁️</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            tbody.innerHTML = html;
         }
 
-        function generateReport() {
-            const data = collectFormData();
-            generateIndividualReport(data);
+        function viewClientDetail(clientName) {
+            const clientRecords = records.filter(r => r.client === clientName);
+
+            let detail = `👥 Cliente: ${clientName}\n\n`;
+            detail += `Total comprado: ${fmt(clientRecords.reduce((sum, r) => sum + (r.totalLanded || 0), 0))}\n`;
+            detail += `Equipos comprados: ${clientRecords.length}\n\n`;
+            detail += `Equipos:\n`;
+
+            clientRecords.forEach((record, index) => {
+                detail += `${index + 1}. ${record.brand} ${record.model} (${record.year}) - ${fmt(record.totalLanded || 0)}\n`;
+            });
+
+            alert(detail);
         }
 
-        function generateIndividualReport(record) {
-            const reportContent = `
-                <div class="report-header">
-                    <div class="report-logo">🚛 TT</div>
-                    <div class="report-title">Transport & Trade Solutions</div>
-                    <div class="report-subtitle">Ficha de Importación Detallada</div>
-                    <div style="margin-top: 1rem; color: #64748b;">
-                        ID: ${record.id} | Fecha: ${new Date(record.timestamp).toLocaleDateString('es-ES')}
-                    </div>
-                </div>
+        function updateDashboard() {
+            $('total-records').textContent = records.length;
 
-                <div class="report-section">
-                    <h3>🔍 Identificación del Equipo</h3>
-                    <div class="report-grid">
-                        <div class="report-item">
-                            <div class="report-label">N.º de Serie</div>
-                            <div class="report-value">${record.serialNumber}</div>
-                        </div>
-                        <div class="report-item">
-                            <div class="report-label">Marca</div>
-                            <div class="report-value">${record.brand}</div>
-                        </div>
-                        <div class="report-item">
-                            <div class="report-label">Modelo</div>
-                            <div class="report-value">${record.model}</div>
-                        </div>
-                        <div class="report-item">
-                            <div class="report-label">Año de Fabricación</div>
-                            <div class="report-value">${record.year}</div>
-                        </div>
-                    </div>
-                </div>
+            const totalValue = records.reduce((sum, record) => sum + (record.totalLanded || 0), 0);
+            $('total-value').textContent = fmt(totalValue);
 
-                <div class="report-section">
-                    <h3>📊 Información Fiscal</h3>
-                    <div class="report-grid">
-                        <div class="report-item">
-                            <div class="report-label">Código HTS</div>
-                            <div class="report-value">${record.htsCode}</div>
-                        </div>
-                        <div class="report-item">
-                            <div class="report-label">Posición Arancelaria</div>
-                            <div class="report-value">${record.tariffPosition}</div>
-                        </div>
-                        <div class="report-item">
-                            <div class="report-label">ID de Importación</div>
-                            <div class="report-value">${record.importId}</div>
-                        </div>
-                        <div class="report-item">
-                            <div class="report-label">Fecha de Nacionalización</div>
-                            <div class="report-value">${record.nationalizationDate ? new Date(record.nationalizationDate).toLocaleDateString('es-ES') : 'N/A'}</div>
-                        </div>
-                    </div>
-                </div>
+            const stockCount = records.filter(r => r.commercialStatus === 'disponible').length;
+            $('stock-count').textContent = stockCount;
 
-                <div class="report-section">
-                    <h3>💰 Desglose de Costos</h3>
-                    <div class="report-grid">
-                        <div class="report-item">
-                            <div class="report-label">Valor CIF</div>
-                            <div class="report-value">$${(record.costs?.cif || 0).toLocaleString()}</div>
-                        </div>
-                        <div class="report-item">
-                            <div class="report-label">Derechos de Importación</div>
-                            <div class="report-value">$${(record.costs?.duties || 0).toLocaleString()}</div>
-                        </div>
-                        <div class="report-item">
-                            <div class="report-label">IVA</div>
-                            <div class="report-value">$${(record.costs?.vat || 0).toLocaleString()}</div>
-                        </div>
-                        <div class="report-item">
-                            <div class="report-label">Honorarios y Gastos</div>
-                            <div class="report-value">$${((record.costs?.customs || 0) + (record.costs?.freight || 0) + (record.costs?.port || 0)).toLocaleString()}</div>
-                        </div>
-                    </div>
-                    <div style="background: #4a8b3c; color: white; padding: 1.5rem; border-radius: 8px; text-align: center; margin-top: 2rem;">
-                        <h2>Landed Cost Total: $${(record.landedCost || 0).toLocaleString()} USD</h2>
-                    </div>
-                </div>
+            const soldCount = records.filter(r => r.commercialStatus === 'entregado').length;
+            $('sold-count').textContent = soldCount;
+        }
 
-                <div class="report-section">
-                    <h3>📦 Estado Actual</h3>
-                    <div class="report-grid">
-                        <div class="report-item">
-                            <div class="report-label">Ubicación Fiscal</div>
-                            <div class="report-value">${record.fiscalLocation || 'N/A'}</div>
-                        </div>
-                        <div class="report-item">
-                            <div class="report-label">Estado Comercial</div>
-                            <div class="report-value">${record.commercialStatus || 'N/A'}</div>
-                        </div>
-                        <div class="report-item">
-                            <div class="report-label">Cliente</div>
-                            <div class="report-value">${record.clientName || 'N/A'}</div>
-                        </div>
-                        <div class="report-item">
-                            <div class="report-label">CUIT Cliente</div>
-                            <div class="report-value">${record.clientCuit || 'N/A'}</div>
-                        </div>
-                    </div>
-                </div>
+        function initializeDashboardCharts() {
+            // Gráfico de evolución
+            const evolutionCtx = $('evolutionChart');
+            if (evolutionCtx) {
+                dashboardCharts.evolution = new Chart(evolutionCtx, {
+                    type: 'line',
+                    data: {
+                        labels: [],
+                        datasets: [{
+                            label: 'Fichas creadas',
+                            data: [],
+                            borderColor: '#667eea',
+                            backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                            tension: 0.3
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                display: true
+                            }
+                        }
+                    }
+                });
+            }
 
-                ${record.diagnosis ? `
-                <div class="report-section">
-                    <h3>🔧 Información de Garantía</h3>
-                    <div class="report-grid">
-                        <div class="report-item">
-                            <div class="report-label">ID de Garantía</div>
-                            <div class="report-value">${record.warrantyId}</div>
-                        </div>
-                        <div class="report-item">
-                            <div class="report-label">Técnico Responsable</div>
-                            <div class="report-value">${record.technician}</div>
-                        </div>
-                        <div class="report-item">
-                            <div class="report-label">Costo de Reparación</div>
-                            <div class="report-value">$${(record.totalInternalCost || 0).toLocaleString()}</div>
-                        </div>
-                        <div class="report-item">
-                            <div class="report-label">Estado del Caso</div>
-                            <div class="report-value">${record.caseResolution || 'Pendiente'}</div>
-                        </div>
-                    </div>
-                    <div style="background: #f8fafc; padding: 1rem; border-radius: 6px; margin-top: 1rem;">
-                        <strong>Diagnóstico:</strong><br>
-                        ${record.diagnosis}
-                    </div>
-                </div>
-                ` : ''}
+            // Gráfico de estado
+            const statusCtx = $('statusPieChart');
+            if (statusCtx) {
+                dashboardCharts.status = new Chart(statusCtx, {
+                    type: 'pie',
+                    data: {
+                        labels: [],
+                        datasets: [{
+                            data: [],
+                            backgroundColor: [
+                                '#22c55e', // disponible
+                                '#f59e0b', // reservado
+                                '#3b82f6', // transito
+                                '#ef4444'  // entregado
+                            ]
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                position: 'bottom'
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Gráfico de marcas
+            const brandsCtx = $('brandsChart');
+            if (brandsCtx) {
+                dashboardCharts.brands = new Chart(brandsCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: [],
+                        datasets: [{
+                            label: 'Unidades',
+                            data: [],
+                            backgroundColor: 'rgba(102, 126, 234, 0.7)'
+                        }]
+                    },
+                    options: {
+                        responsive: true
+                    }
+                });
+            }
+
+            // Gráfico de costos
+            const costsCtx = $('costsBarChart');
+            if (costsCtx) {
+                dashboardCharts.costs = new Chart(costsCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: [],
+                        datasets: [{
+                            label: 'USD',
+                            data: [],
+                            backgroundColor: 'rgba(102, 126, 234, 0.7)'
+                        }]
+                    },
+                    options: {
+                        responsive: true
+                    }
+                });
+            }
+
+            // Gráfico de clientes
+            const clientsCtx = $('clientsChart');
+            if (clientsCtx) {
+                dashboardCharts.clients = new Chart(clientsCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: [],
+                        datasets: [{
+                            data: [],
+                            backgroundColor: [
+                                '#667eea',
+                                '#764ba2',
+                                '#a855f7',
+                                '#c084fc',
+                                '#e9d5ff'
+                            ]
+                        }]
+                    },
+                    options: {
+                        responsive: true
+                    }
+                });
+            }
+
+            // Gráfico de performance
+            const performanceCtx = $('performanceChart');
+            if (performanceCtx) {
+                dashboardCharts.performance = new Chart(performanceCtx, {
+                    type: 'radar',
+                    data: {
+                        labels: ['Costo', 'Tiempo', 'Calidad', 'Riesgo', 'Eficiencia'],
+                        datasets: [
+                            {
+                                label: 'Actual',
+                                data: [80, 70, 90, 60, 85],
+                                borderColor: '#4a8b3c',
+                                backgroundColor: 'rgba(74, 139, 60, 0.2)'
+                            },
+                            {
+                                label: 'Objetivo IA',
+                                data: [90, 85, 95, 80, 95],
+                                borderColor: '#f59e0b',
+                                backgroundColor: 'rgba(245, 158, 11, 0.2)'
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            r: {
+                                beginAtZero: true,
+                                max: 100
+                            }
+                        }
+                    }
+                });
+            }
+
+            updateDashboardCharts();
+        }
+
+        function updateDashboardCharts() {
+            if (!dashboardCharts.status || records.length === 0) return;
+
+            // Gráfico de estados
+            const statusCounts = {
+                disponible: 0,
+                reservado: 0,
+                transito: 0,
+                entregado: 0
+            };
+
+            records.forEach(record => {
+                const status = record.commercialStatus || 'disponible';
+                if (statusCounts[status] !== undefined) {
+                    statusCounts[status]++;
+                }
+            });
+
+            dashboardCharts.status.data.labels = Object.keys(statusCounts);
+            dashboardCharts.status.data.datasets[0].data = Object.values(statusCounts);
+            dashboardCharts.status.update();
+
+            // Gráfico de marcas
+            const brands = {};
+            records.forEach(record => {
+                if (record.brand) {
+                    brands[record.brand] = (brands[record.brand] || 0) + 1;
+                }
+            });
+
+            dashboardCharts.brands.data.labels = Object.keys(brands);
+            dashboardCharts.brands.data.datasets[0].data = Object.values(brands);
+            dashboardCharts.brands.update();
+
+            // Gráfico de evolución mensual
+            const months = {};
+            records.forEach(record => {
+                if (record.createdAt) {
+                    const date = new Date(record.createdAt);
+                    const monthKey = `${date.getMonth() + 1}/${date.getFullYear()}`;
+                    months[monthKey] = (months[monthKey] || 0) + 1;
+                }
+            });
+
+            // Ordenar por fecha
+            const sortedMonths = Object.keys(months).sort((a, b) => {
+                const [monthA, yearA] = a.split('/');
+                const [monthB, yearB] = b.split('/');
+                return new Date(yearA, monthA - 1) - new Date(yearB, monthB - 1);
+            });
+
+            dashboardCharts.evolution.data.labels = sortedMonths;
+            dashboardCharts.evolution.data.datasets[0].data = sortedMonths.map(month => months[month]);
+            dashboardCharts.evolution.update();
+
+            // Gráfico de top clientes
+            const clientTotals = {};
+            records.forEach(record => {
+                if (record.client && record.totalLanded) {
+                    clientTotals[record.client] = (clientTotals[record.client] || 0) + record.totalLanded;
+                }
+            });
+
+            // Tomar top 5
+            const topClients = Object.entries(clientTotals)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 5);
+
+            dashboardCharts.clients.data.labels = topClients.map(([client]) => client);
+            dashboardCharts.clients.data.datasets[0].data = topClients.map(([, total]) => total);
+            dashboardCharts.clients.update();
+        }
+
+        function addActivity(text) {
+            const activityList = $('activity-list');
+            const activityItem = document.createElement('div');
+            activityItem.className = 'activity-item';
+            activityItem.innerHTML = `
+                <div>${text}</div>
+                <div class="activity-time">${new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}</div>
             `;
-            
-            document.getElementById('report-content').innerHTML = reportContent;
-            document.getElementById('report-modal').classList.remove('hidden');
+
+            activityList.insertBefore(activityItem, activityList.firstChild);
+
+            // Mantener máximo 10 actividades
+            while (activityList.children.length > 10) {
+                activityList.removeChild(activityList.lastChild);
+            }
+        }
+
+        function showTab(tabName) {
+            // Ocultar todas las pestañas
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Desactivar todas las pestañas
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Mostrar pestaña seleccionada
+            const selectedTab = $(tabName);
+            if (selectedTab) {
+                selectedTab.classList.add('active');
+            }
+
+            // Activar tab en navegación
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => {
+                if (tab.textContent.includes(tabName === 'nueva-ficha' ? 'Nueva Ficha' :
+                    tabName === 'lista-fichas' ? 'Lista de Fichas' :
+                        tabName === 'dashboard' ? 'Dashboard' :
+                            tabName === 'scanner' ? 'Scanner QR' :
+                                tabName === 'reportes' ? 'Reportes' :
+                                    tabName === 'clientes' ? 'Clientes' : '')) {
+                    tab.classList.add('active');
+                }
+            });
+
+            // Actualizar contenido si es necesario
+            if (tabName === 'lista-fichas') {
+                loadRecordsTable();
+            } else if (tabName === 'clientes') {
+                loadClientsTable();
+            } else if (tabName === 'dashboard') {
+                updateDashboardCharts();
+            }
+        }
+
+        function exportAllData() {
+            const dataStr = JSON.stringify(records, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+
+            const exportFileDefaultName = `TT_Backup_${new Date().toISOString().slice(0, 10)}.json`;
+
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+
+            addActivity('Todos los datos exportados');
+            alert('📊 Datos exportados exitosamente!');
+        }
+
+        function exportFilteredData() {
+            // Por simplicidad, exporta todos los datos
+            exportAllData();
         }
 
         function generateConsolidatedReport() {
             if (records.length === 0) {
-                alert('No hay datos para generar el reporte');
+                alert('No hay datos para generar reportes');
                 return;
             }
 
-            const totalValue = records.reduce((sum, record) => sum + (record.landedCost || 0), 0);
-            const avgCost = totalValue / records.length;
+            const headers = [['ID', 'Serie', 'Marca', 'Modelo', 'Año', 'Landed Cost', 'Estado', 'Cliente']];
+            const rows = records.map(record => [
+                record.id,
+                record.serial,
+                record.brand,
+                record.model,
+                record.year,
+                fmt(record.totalLanded || 0),
+                record.commercialStatus || 'No definido',
+                record.client || '—'
+            ]);
 
-            const reportContent = `
-                <div class="report-header">
-                    <div class="report-logo">🚛 TT</div>
-                    <div class="report-title">Transport & Trade Solutions</div>
-                    <div class="report-subtitle">Reporte Consolidado de Importaciones</div>
-                    <div style="margin-top: 1rem; color: #64748b;">
-                        Generado: ${new Date().toLocaleDateString('es-ES')} | Total Registros: ${records.length}
-                    </div>
-                </div>
-
-                <div class="report-section">
-                    <h3>📊 Resumen Ejecutivo</h3>
-                    <div class="report-grid">
-                        <div class="report-item">
-                            <div class="report-label">Total Importaciones</div>
-                            <div class="report-value">${records.length}</div>
-                        </div>
-                        <div class="report-item">
-                            <div class="report-label">Valor Total Invertido</div>
-                            <div class="report-value">$${totalValue.toLocaleString()} USD</div>
-                        </div>
-                        <div class="report-item">
-                            <div class="report-label">Costo Promedio por Unidad</div>
-                            <div class="report-value">$${avgCost.toLocaleString()} USD</div>
-                        </div>
-                        <div class="report-item">
-                            <div class="report-label">En Stock</div>
-                            <div class="report-value">${records.filter(r => r.fiscalLocation === 'stock').length}</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="report-section">
-                    <h3>📋 Detalle por Equipo</h3>
-                    <table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
-                        <thead>
-                            <tr style="background: #4a8b3c; color: white;">
-                                <th style="padding: 0.75rem; text-align: left;">ID</th>
-                                <th style="padding: 0.75rem; text-align: left;">Equipo</th>
-                                <th style="padding: 0.75rem; text-align: left;">Serie</th>
-                                <th style="padding: 0.75rem; text-align: right;">Landed Cost</th>
-                                <th style="padding: 0.75rem; text-align: left;">Estado</th>
-                                <th style="padding: 0.75rem; text-align: left;">Cliente</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${records.map(record => `
-                                <tr style="border-bottom: 1px solid #e2e8f0;">
-                                    <td style="padding: 0.75rem;">${record.id}</td>
-                                    <td style="padding: 0.75rem;">${record.brand} ${record.model}</td>
-                                    <td style="padding: 0.75rem;">${record.serialNumber}</td>
-                                    <td style="padding: 0.75rem; text-align: right;">$${(record.landedCost || 0).toLocaleString()}</td>
-                                    <td style="padding: 0.75rem;">${record.commercialStatus || 'N/A'}</td>
-                                    <td style="padding: 0.75rem;">${record.clientName || 'N/A'}</td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                </div>
-            `;
-
-            document.getElementById('report-content').innerHTML = reportContent;
-            document.getElementById('report-modal').classList.remove('hidden');
+            showReport('Reporte Consolidado de Fichas', headers, rows);
         }
 
         function generateCostAnalysis() {
             if (records.length === 0) {
-                alert('No hay datos para el análisis');
+                alert('No hay datos para generar reportes');
                 return;
             }
 
-            // Análisis de costos
-            const costBreakdown = records.reduce((acc, record) => {
-                if (record.costs) {
-                    acc.cif += record.costs.cif || 0;
-                    acc.duties += record.costs.duties || 0;
-                    acc.vat += record.costs.vat || 0;
-                    acc.freight += record.costs.freight || 0;
-                    acc.other += (record.costs.taxes || 0) + (record.costs.customs || 0) + (record.costs.port || 0) + (record.costs.inspections || 0);
-                }
-                return acc;
-            }, { cif: 0, duties: 0, vat: 0, freight: 0, other: 0 });
+            const totals = {
+                CIF: 0,
+                Duties: 0,
+                Stats: 0,
+                IVA: 0,
+                Taxes: 0,
+                Customs: 0,
+                Freight: 0,
+                Port: 0,
+                Inspections: 0
+            };
 
-            const total = Object.values(costBreakdown).reduce((sum, val) => sum + val, 0);
+            records.forEach(record => {
+                totals.CIF += record.cif || 0;
+                totals.Duties += record.duties || 0;
+                totals.Stats += record.stats || 0;
+                totals.IVA += record.vat || 0;
+                totals.Taxes += record.taxes || 0;
+                totals.Customs += record.customs || 0;
+                totals.Freight += record.freight || 0;
+                totals.Port += record.port || 0;
+                totals.Inspections += record.inspections || 0;
+            });
 
-            const reportContent = `
-                <div class="report-header">
-                    <div class="report-logo">📊</div>
-                    <div class="report-title">Análisis de Costos de Importación</div>
-                    <div class="report-subtitle">Desglose y distribución de gastos</div>
-                </div>
+            const headers = [['Concepto', 'Total USD']];
+            const rows = Object.entries(totals).map(([concept, total]) => [concept, fmt(total)]);
 
-                <div class="report-section">
-                    <h3>💰 Distribución de Costos</h3>
-                    <div class="report-grid">
-                        <div class="report-item">
-                            <div class="report-label">Valor CIF Total</div>
-                            <div class="report-value">$${costBreakdown.cif.toLocaleString()}</div>
-                            <small>${((costBreakdown.cif / total) * 100).toFixed(1)}%</small>
-                        </div>
-                        <div class="report-item">
-                            <div class="report-label">Derechos Totales</div>
-                            <div class="report-value">$${costBreakdown.duties.toLocaleString()}</div>
-                            <small>${((costBreakdown.duties / total) * 100).toFixed(1)}%</small>
-                        </div>
-                        <div class="report-item">
-                            <div class="report-label">IVA Total</div>
-                            <div class="report-value">$${costBreakdown.vat.toLocaleString()}</div>
-                            <small>${((costBreakdown.vat / total) * 100).toFixed(1)}%</small>
-                        </div>
-                        <div class="report-item">
-                            <div class="report-label">Gastos Logísticos</div>
-                            <div class="report-value">$${costBreakdown.freight.toLocaleString()}</div>
-                            <small>${((costBreakdown.freight / total) * 100).toFixed(1)}%</small>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="report-section">
-                    <h3>📈 Métricas Clave</h3>
-                    <div style="background: #f8fafc; padding: 2rem; border-radius: 8px;">
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
-                            <div style="text-align: center;">
-                                <div style="font-size: 2rem; font-weight: bold; color: #4a8b3c;">
-                                    ${((costBreakdown.duties + costBreakdown.vat) / costBreakdown.cif * 100).toFixed(1)}%
-                                </div>
-                                <div style="color: #64748b;">Carga Tributaria Promedio</div>
-                            </div>
-                            <div style="text-align: center;">
-                                <div style="font-size: 2rem; font-weight: bold; color: #4a8b3c;">
-                                    $${(total / records.length).toLocaleString()}
-                                </div>
-                                <div style="color: #64748b;">Costo Promedio por Equipo</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-
-            document.getElementById('report-content').innerHTML = reportContent;
-            document.getElementById('report-modal').classList.remove('hidden');
+            showReport('Análisis de Costos de Importación', headers, rows);
         }
 
         function generateInventoryReport() {
-            const byLocation = records.reduce((acc, record) => {
-                const location = record.fiscalLocation || 'Sin definir';
-                if (!acc[location]) acc[location] = [];
-                acc[location].push(record);
-                return acc;
-            }, {});
+            if (records.length === 0) {
+                alert('No hay datos para generar reportes');
+                return;
+            }
 
-            const reportContent = `
-                <div class="report-header">
-                    <div class="report-logo">📦</div>
-                    <div class="report-title">Reporte de Inventario</div>
-                    <div class="report-subtitle">Estado y ubicación actual de equipos</div>
-                </div>
+            const inventoryRecords = records.filter(r => r.commercialStatus === 'disponible');
 
-                ${Object.entries(byLocation).map(([location, items]) => `
-                    <div class="report-section">
-                        <h3>📍 ${location.charAt(0).toUpperCase() + location.slice(1)} (${items.length} equipos)</h3>
-                        <div style="margin-left: 1rem;">
-                            ${items.map(item => `
-                                <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #e2e8f0;">
-                                    <span><strong>${item.brand} ${item.model}</strong> - ${item.serialNumber}</span>
-                                    <span>$${(item.landedCost || 0).toLocaleString()}</span>
-                                </div>
-                            `).join('')}
-                            <div style="text-align: right; font-weight: bold; margin-top: 1rem; padding-top: 1rem; border-top: 2px solid #4a8b3c;">
-                                Subtotal: $${items.reduce((sum, item) => sum + (item.landedCost || 0), 0).toLocaleString()}
-                            </div>
-                        </div>
-                    </div>
-                `).join('')}
-            `;
+            const headers = [['ID', 'Serie', 'Marca', 'Modelo', 'Año', 'Landed Cost', 'Ubicación']];
+            const rows = inventoryRecords.map(record => [
+                record.id,
+                record.serial,
+                record.brand,
+                record.model,
+                record.year,
+                fmt(record.totalLanded || 0),
+                record.fiscalLocation || 'Stock'
+            ]);
 
-            document.getElementById('report-content').innerHTML = reportContent;
-            document.getElementById('report-modal').classList.remove('hidden');
+            showReport('Reporte de Inventario Actual', headers, rows);
         }
 
-        function generateClientReport(cuitFilter = null) {
-            const clientRecords = cuitFilter ? 
-                records.filter(r => r.clientCuit === cuitFilter) : 
-                records.filter(r => r.clientName && r.clientCuit);
+        function generateClientReport() {
+            if (records.length === 0) {
+                alert('No hay datos para generar reportes');
+                return;
+            }
 
-            const clients = clientRecords.reduce((acc, record) => {
-                if (!acc[record.clientCuit]) {
-                    acc[record.clientCuit] = {
-                        name: record.clientName,
-                        cuit: record.clientCuit,
-                        purchases: [],
-                        total: 0
-                    };
+            const clientData = {};
+            records.forEach(record => {
+                if (record.client) {
+                    if (!clientData[record.client]) {
+                        clientData[record.client] = {
+                            total: 0,
+                            count: 0
+                        };
+                    }
+                    clientData[record.client].total += record.totalLanded || 0;
+                    clientData[record.client].count++;
                 }
-                acc[record.clientCuit].purchases.push(record);
-                acc[record.clientCuit].total += record.landedCost || 0;
-                return acc;
-            }, {});
+            });
 
-            const reportContent = `
-                <div class="report-header">
-                    <div class="report-logo">👥</div>
-                    <div class="report-title">Reporte de Clientes</div>
-                    <div class="report-subtitle">${cuitFilter ? 'Cliente específico' : 'Todos los clientes'}</div>
-                </div>
+            const headers = [['Cliente', 'Equipos', 'Total Comprado']];
+            const rows = Object.entries(clientData).map(([client, data]) => [
+                client,
+                data.count,
+                fmt(data.total)
+            ]);
 
-                ${Object.values(clients).map(client => `
-                    <div class="report-section">
-                        <h3>🏢 ${client.name}</h3>
-                        <div class="report-grid">
-                            <div class="report-item">
-                                <div class="report-label">CUIT</div>
-                                <div class="report-value">${client.cuit}</div>
-                            </div>
-                            <div class="report-item">
-                                <div class="report-label">Total Compras</div>
-                                <div class="report-value">$${client.total.toLocaleString()}</div>
-                            </div>
-                            <div class="report-item">
-                                <div class="report-label">Equipos Adquiridos</div>
-                                <div class="report-value">${client.purchases.length}</div>
-                            </div>
-                        </div>
-                        
-                        <h4 style="margin-top: 1.5rem;">Equipos Adquiridos:</h4>
-                        ${client.purchases.map(purchase => `
-                            <div style="background: #f8fafc; padding: 1rem; margin: 0.5rem 0; border-radius: 6px;">
-                                <strong>${purchase.brand} ${purchase.model}</strong> - ${purchase.serialNumber}
-                                <br>Factura: ${purchase.invoiceNumber || 'N/A'} | 
-                                Entrega: ${purchase.deliveryDate ? new Date(purchase.deliveryDate).toLocaleDateString('es-ES') : 'Pendiente'}
-                                <br>Valor: <strong>$${(purchase.landedCost || 0).toLocaleString()}</strong>
-                            </div>
-                        `).join('')}
-                    </div>
-                `).join('')}
-            `;
+            showReport('Reporte de Ventas por Cliente', headers, rows);
+        }
 
-            document.getElementById('report-content').innerHTML = reportContent;
-            document.getElementById('report-modal').classList.remove('hidden');
+        function showReport(title, headers, rows) {
+            const modal = $('report-modal');
+            const content = $('report-content');
+
+            // Construir tabla HTML
+            let tableHTML = `<h3 style="margin-bottom: 1.5rem;">${title}</h3>`;
+            tableHTML += '<table class="data-table">';
+
+            // Headers
+            tableHTML += '<thead><tr>';
+            headers[0].forEach(header => {
+                tableHTML += `<th>${header}</th>`;
+            });
+            tableHTML += '</tr></thead>';
+
+            // Rows
+            tableHTML += '<tbody>';
+            rows.forEach(row => {
+                tableHTML += '<tr>';
+                row.forEach(cell => {
+                    tableHTML += `<td>${cell}</td>`;
+                });
+                tableHTML += '</tr>';
+            });
+            tableHTML += '</tbody></table>';
+
+            content.innerHTML = tableHTML;
+            modal.classList.remove('hidden');
+
+            // Guardar datos para exportación
+            window.currentReport = { title, headers, rows };
         }
 
         function closeModal() {
-            document.getElementById('report-modal').classList.add('hidden');
+            $('report-modal').classList.add('hidden');
         }
 
         function printReport() {
@@ -2093,213 +2712,101 @@
         function downloadPDF() {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
-            
-            // Header
-            doc.setFontSize(20);
-            doc.text('Transport & Trade Solutions', 20, 30);
-            doc.setFontSize(14);
-            doc.text('Reporte de Importaciones', 20, 40);
-            doc.setFontSize(10);
-            doc.text(`Generado: ${new Date().toLocaleDateString('es-ES')}`, 20, 50);
-            
-            // Content
-            const reportText = document.getElementById('report-content').innerText;
-            const lines = doc.splitTextToSize(reportText, 170);
-            doc.text(lines, 20, 70);
-            
-            doc.save('reporte-tt-importaciones.pdf');
+
+            // Título
+            doc.setFontSize(16);
+            doc.text(window.currentReport.title, 14, 22);
+
+            // Tabla
+            doc.autoTable({
+                startY: 30,
+                head: window.currentReport.headers,
+                body: window.currentReport.rows,
+                theme: 'grid',
+                headStyles: { fillColor: [102, 126, 234] }
+            });
+
+            // Guardar
+            doc.save(`${window.currentReport.title.replace(/\s+/g, '_')}.pdf`);
         }
 
         function downloadExcel() {
-            const csvContent = generateCSV();
+            // Convertir a CSV
+            const csvContent = [
+                window.currentReport.headers[0].join(','),
+                ...window.currentReport.rows.map(row =>
+                    row.map(cell =>
+                        typeof cell === 'string' && cell.includes('$')
+                            ? cell.replace('$', '').replace(/\./g, '').replace(',', '.')
+                            : cell
+                    ).join(',')
+                )
+            ].join('\n');
+
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement('a');
             const url = URL.createObjectURL(blob);
-            
+            const link = document.createElement('a');
+
             link.setAttribute('href', url);
-            link.setAttribute('download', 'datos-importaciones-tt.csv');
+            link.setAttribute('download', `${window.currentReport.title.replace(/\s+/g, '_')}.csv`);
             link.style.visibility = 'hidden';
-            
+
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
         }
 
-        function generateCSV() {
-            const headers = [
-                'ID', 'Fecha', 'Serie', 'Marca', 'Modelo', 'Año', 'HTS', 'Import ID',
-                'Nacionalización', 'CIF', 'Derechos', 'IVA', 'Landed Cost',
-                'Ubicación', 'Estado', 'Cliente', 'CUIT', 'Factura', 'Entrega'
-            ];
-            
-            const rows = records.map(record => [
-                record.id,
-                new Date(record.timestamp).toLocaleDateString('es-ES'),
-                record.serialNumber,
-                record.brand,
-                record.model,
-                record.year,
-                record.htsCode,
-                record.importId,
-                record.nationalizationDate,
-                record.costs?.cif || 0,
-                record.costs?.duties || 0,
-                record.costs?.vat || 0,
-                record.landedCost || 0,
-                record.fiscalLocation || '',
-                record.commercialStatus || '',
-                record.clientName || '',
-                record.clientCuit || '',
-                record.invoiceNumber || '',
-                record.deliveryDate || ''
-            ]);
-            
-            return [headers, ...rows]
-                .map(row => row.map(cell => `"${cell}"`).join(','))
-                .join('\n');
+        function showNotifications() {
+            alert('🔔 Sistema de notificaciones:\n\n' +
+                '• Todo en orden\n' +
+                '• Próximamente: alertas automáticas por vencimientos y stock bajo\n' +
+                '• Notificaciones en tiempo real');
         }
 
-        function exportAllData() {
-            if (records.length === 0) {
-                alert('No hay datos para exportar');
+        function resetSystem() {
+            if (confirm('⚠️ ¿Está seguro de reiniciar el sistema?\n\nSe perderán todos los datos locales.')) {
+                localStorage.clear();
+                sessionStorage.clear();
+                records = [];
+                recordCounter = 1;
+
+                initializeApp();
+
+                alert('✅ Sistema reiniciado exitosamente');
+                location.reload();
+            }
+        }
+
+        function closeQRModal() {
+            $('qr-modal').classList.add('hidden');
+        }
+
+        function downloadQR() {
+            const canvas = $('qrcode').querySelector('canvas');
+            if (!canvas) {
+                alert('Primero genere un código QR');
                 return;
             }
-            
-            const data = {
-                records: records,
-                exportDate: new Date().toISOString(),
-                totalRecords: records.length,
-                totalValue: records.reduce((sum, r) => sum + (r.landedCost || 0), 0),
-                metadata: {
-                    version: '1.0',
-                    system: 'TT Import Management System'
-                }
-            };
-            
-            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+
             const link = document.createElement('a');
-            const url = URL.createObjectURL(blob);
-            
-            link.setAttribute('href', url);
-            link.setAttribute('download', `backup-tt-${new Date().toISOString().split('T')[0]}.json`);
-            link.style.visibility = 'hidden';
-            
-            document.body.appendChild(link);
+            link.download = `QR_${$('serial-number').value || 'equipo'}.png`;
+            link.href = canvas.toDataURL('image/png');
             link.click();
-            document.body.removeChild(link);
-            
-            showAlert('Backup completo descargado', 'success');
         }
 
-        function exportFilteredData() {
-            const visibleRows = Array.from(document.querySelectorAll('#records-tbody tr'))
-                .filter(row => row.style.display !== 'none' && row.cells.length > 1);
-            
-            if (visibleRows.length === 0) {
-                alert('No hay datos filtrados para exportar');
-                return;
+        // Código de diagnóstico
+        console.log('Script cargado correctamente');
+        console.log('Función $ definida:', typeof $ === 'function');
+        console.log('Botón save-button existe:', !!$('save-button'));
+        console.log('Botón cancel-edit-btn existe:', !!$('cancel-edit-btn'));
+
+        // Agregar event listeners para debugging
+        document.addEventListener('click', function (e) {
+            if (e.target && e.target.textContent.includes('✏️')) {
+                console.log('Click en botón editar detectado');
             }
-            
-            const filteredRecords = visibleRows.map(row => {
-                const id = row.cells[0].textContent.split('\n')[0];
-                return records.find(r => r.id === id);
-            }).filter(Boolean);
-            
-            const csvContent = generateCSVFromRecords(filteredRecords);
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement('a');
-            const url = URL.createObjectURL(blob);
-            
-            link.setAttribute('href', url);
-            link.setAttribute('download', 'datos-filtrados-tt.csv');
-            link.style.visibility = 'hidden';
-            
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            
-            showAlert('Datos filtrados exportados', 'success');
-        }
-
-        function generateCSVFromRecords(recordList) {
-            const headers = [
-                'ID', 'Fecha', 'Serie', 'Marca', 'Modelo', 'Año', 'HTS', 'Import ID',
-                'Nacionalización', 'CIF', 'Derechos', 'IVA', 'Landed Cost',
-                'Ubicación', 'Estado', 'Cliente', 'CUIT', 'Factura', 'Entrega'
-            ];
-            
-            const rows = recordList.map(record => [
-                record.id,
-                new Date(record.timestamp).toLocaleDateString('es-ES'),
-                record.serialNumber,
-                record.brand,
-                record.model,
-                record.year,
-                record.htsCode,
-                record.importId,
-                record.nationalizationDate,
-                record.costs?.cif || 0,
-                record.costs?.duties || 0,
-                record.costs?.vat || 0,
-                record.landedCost || 0,
-                record.fiscalLocation || '',
-                record.commercialStatus || '',
-                record.clientName || '',
-                record.clientCuit || '',
-                record.invoiceNumber || '',
-                record.deliveryDate || ''
-            ]);
-            
-            return [headers, ...rows]
-                .map(row => row.map(cell => `"${cell}"`).join(','))
-                .join('\n');
-        }
-
-        function showAlert(message, type = 'success') {
-            const alertDiv = document.createElement('div');
-            alertDiv.className = `alert alert-${type}`;
-            alertDiv.textContent = message;
-            alertDiv.style.position = 'fixed';
-            alertDiv.style.top = '20px';
-            alertDiv.style.right = '20px';
-            alertDiv.style.zIndex = '9999';
-            alertDiv.style.maxWidth = '300px';
-            
-            document.body.appendChild(alertDiv);
-            
-            setTimeout(() => {
-                alertDiv.remove();
-            }, 3000);
-        }
-
-        function autoSave() {
-            const data = collectFormData();
-            if (data.serialNumber) { // Solo auto-guardar si hay algún dato
-                localStorage.setItem('ttAutoSave', JSON.stringify(data));
-            }
-        }
-
-        function showDashboard() {
-            alert('Dashboard en desarrollo. Métricas disponibles en la parte superior.');
-        }
-
-        function showHelp() {
-            alert('Sistema de Gestión de Importaciones TT\n\n' +
-                  '• Complete las secciones en orden\n' +
-                  '• Los campos marcados con * son obligatorios\n' +
-                  '• Use el ID Landed Cost para activar el cálculo de costos\n' +
-                  '• Los reportes se generan automáticamente\n' +
-                  '• Los datos se guardan localmente en su navegador\n\n' +
-                  'Para soporte: info@transport-trade.com');
-        }
-
-        // Inicializar gráfico vacío al cargar
-        setTimeout(() => {
-            updateCostsChart({
-                cif: 0, duties: 0, stats: 0, vat: 0, taxes: 0, 
-                customs: 0, freight: 0, port: 0, inspections: 0
-            });
-        }, 1000);
+        });
     </script>
 </body>
+
 </html>
